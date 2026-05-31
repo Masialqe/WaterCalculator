@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using WaterCalculator.Components;
 using WaterCalculator.Database;
 

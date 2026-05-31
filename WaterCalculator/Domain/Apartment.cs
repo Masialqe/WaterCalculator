@@ -11,5 +11,15 @@
         public ICollection<Read> Reads { get; set; } = [];
         public ICollection<Settlement> Settlements { get; set; } = [];
 
+        public Apartment(){}
+        public Apartment(string name, string details, Guid? groupId)
+        {
+            Name = name;
+            Details = details;
+            GroupId = groupId;
+        }
+        
+        public static Apartment Create(string name, string details, Guid? groupId)
+         => new Apartment(name, details, groupId);
     }
 }
