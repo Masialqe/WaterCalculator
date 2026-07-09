@@ -1,0 +1,61 @@
+﻿<button type="@Type"
+        class="@CssClass"
+        disabled="@IsDisabled"
+        @onclick="OnClick">
+
+    @if (IsLoading)
+    {
+        <svg class="h-4 w-4 animate-spin"
+             xmlns="http://www.w3.org/2000/svg"
+             fill="none"
+             viewBox="0 0 24 24">
+            <circle class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4" />
+
+            <path class="opacity-90"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        </svg>
+    }
+    else
+    {
+        @ChildContent
+    }
+
+</button>
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Type { get; set; } = "button";
+    [Parameter] public string AdditionalClasses { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private bool IsDisabled => Disabled || IsLoading;
+
+    private string CssClass =>
+        $$"""
+        rounded-xl
+        border
+        border-indigo-500/40
+        px-5
+        py-2
+        text-sm
+        font-medium
+        text-indigo-300
+        transition
+        hover:bg-indigo-500/10
+        disabled:cursor-not-allowed
+        disabled:opacity-50
+        inline-flex
+        items-center
+        justify-center
+        gap-2
+        {{AdditionalClasses}}
+        """.Trim();
+}

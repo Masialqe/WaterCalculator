@@ -1,0 +1,53 @@
+﻿@* @using System.Linq.Expressions
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="space-y-2">
+    <label for="@Id" class="block text-sm font-medium text-slate-300">
+        @Label
+    </label>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 transition focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/30">
+        <InputFile id="@Id"
+                   OnChange="HandleChange"
+                   class="block w-full cursor-pointer text-sm text-slate-300 file:mr-4 file:rounded-lg file:border file:border-slate-700 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-200 hover:file:bg-slate-800" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(SelectedFileName))
+    {
+        <p class="text-sm text-slate-400">
+            Wybrany plik:
+            <span class="font-medium text-slate-200">@SelectedFileName</span>
+        </p>
+    }
+
+    <ValidationMessage For="@ValueExpression" class="mt-1 text-sm text-red-300" />
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public IBrowserFile? Value { get; set; }
+    [Parameter] public EventCallback<IBrowserFile?> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<IBrowserFile?>> ValueExpression { get; set; } = default!;
+
+    private string SelectedFileName => Value?.Name ?? string.Empty;
+
+    private async Task HandleChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        Value = file;
+        await ValueChanged.InvokeAsync(file);
+    }
+} *@
+
+<div class="space-y-2">
+    <label for="invoiceFile" class="block text-sm font-medium text-slate-300">
+        Plik faktury
+    </label>
+
+    <div class="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 transition focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/30">
+        <input id="invoiceFile"
+               type="file"
+               class="block w-full cursor-pointer text-sm text-slate-300 file:mr-4 file:rounded-lg file:border file:border-slate-700 file:bg-slate-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-200 hover:file:bg-slate-800" />
+    </div>
+</div>

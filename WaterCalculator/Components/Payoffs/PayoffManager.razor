@@ -1,0 +1,81 @@
+﻿@using WaterCalculator.Features.Payoffs.Get
+@inject GetPayoffDetailsHandler GetPayoffSummaryHandler
+
+<SpinnerFallback IsLoading="_state.IsLoading" Message="Ładowanie rozliczenia...">
+    @if (_state.IsError)
+    {
+        <ErrorMessage Message="@_state.ErrorMessage" />
+    }
+    @if (_payoffSummary is not null)
+    {
+        <PayoffView Summary="_payoffSummary" 
+            OnPayoffChanged="LoadPayoffAsync" 
+            OnPayoffSettled="HandlePayoffSettled" />
+    }
+    else
+    {
+        <div class="space-y-4">
+            <div class="text-left">
+                <h2 class="text-xl font-semibold text-white">
+                    Utwórz rozliczenie
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-slate-400">
+                    Dla wybranej grupy nie znaleziono aktywnego rozliczenia.
+                </p>
+            </div>
+
+            <PayoffForm GroupId="GroupId" OnCreated="LoadPayoffAsync" />
+        </div>
+    }
+</SpinnerFallback>
+
+<Modal Title="Podsumowanie rozliczenia">
+    <PayoffSettlementSummaryComponent/>
+</Modal>
+
+    @code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public Guid GroupId { get; set; }
+
+    private ComponentState _state = new();
+    private PayoffDetails? _payoffSummary;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadPayoffAsync();
+    }
+
+    private async Task LoadPayoffAsync()
+    {
+        if (GroupId == Guid.Empty)
+            return;
+
+        _state.SetLoading();
+
+        var result = await GetPayoffSummaryHandler.HandleAsync(GroupId, CancellationToken);
+
+        if (result.IsFailure)
+        {
+            _payoffSummary = null;
+
+            if (result.Error != Errors.NotFoundError)
+            {
+                _state.SetError(result.Error.ErrorDescription);
+            }
+            else
+            {
+                _state.SetSuccess();
+            }
+
+            return;
+        }
+
+        _payoffSummary = result.Value;
+        _state.SetSuccess();
+    }
+
+    private async Task HandlePayoffSettled()
+    {
+        await LoadPayoffAsync();
+    }
+}

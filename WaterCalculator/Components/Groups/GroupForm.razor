@@ -1,0 +1,76 @@
+﻿@inject UpsertGroupHandler UpsertGroupHandler
+@inject GetGroupByIdHandler GetGroupByIdHandler
+
+<EditForm Model="_model" FormName="CreateGroup" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <div class="space-y-5">
+        <TextInput Id="name"
+                   Label="Nazwa grupy"
+                   Placeholder="Nazwa grupy"
+                   Autocomplete="group-name"
+                   @bind-Value="_model.GroupName"/>
+        <TextInput Id="description"
+                   Label="Opis grupy"
+                   Placeholder="Opis grupy"
+                   Autocomplete="group-description"
+                   @bind-Value="_model.GroupDetails" />
+        @if (_state.IsError)
+        {
+            <ErrorMessage Message="@_state.ErrorMessage" />
+        }
+
+        <PrimaryButton IsLoading="_state.IsLoading" Type="submit">
+            Zapisz
+        </PrimaryButton>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public EventCallback OnGroupSaved { get; set; }
+    [Parameter] public Guid? GroupId { get; set; }
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+
+    private GroupFormModel _model { get; set; } = new();
+    private ComponentState _state = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(GroupId is not null && GroupId != Guid.Empty)
+        {
+            _state.SetLoading();
+            var result = await GetGroupByIdHandler.HandleAsync((Guid)GroupId, CancellationToken);
+            if(result.IsFailure)
+            {
+                _state.SetError(result.Error.ErrorDescription);
+                return;
+            }
+
+            _model = new GroupFormModel
+            {
+                GroupName = result.Value.Name,
+                GroupDetails = result.Value.Details
+            };
+
+            _state.EndLoading();
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        _state.SetLoading();
+        var result = await UpsertGroupHandler.HandleAsync(new UpsertGroupCommand(
+            _model.GroupName,
+            _model.GroupDetails,
+            GroupId), CancellationToken);
+
+        if(result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _model = new();
+        _state.SetSuccess();
+        await OnGroupSaved.InvokeAsync();
+    }
+}

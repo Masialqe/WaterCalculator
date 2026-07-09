@@ -1,0 +1,24 @@
+﻿<aside class="hidden w-72 shrink-0 border-r border-slate-800 bg-slate-900/70 backdrop-blur lg:flex lg:flex-col"
+       aria-label="Menu główne">
+    <div class="border-b border-slate-800 px-6 py-5">
+        <h1 class="text-lg font-semibold text-white">Water Calculator</h1>
+        <p class="mt-1 text-sm text-slate-400">Panel administracyjny</p>
+    </div>
+
+    <nav class="flex-1 px-4 py-4" aria-label="Nawigacja boczna">
+        <ul class="space-y-2">
+            <SidebarNavItem Href="/groups" Label="Grupy" Icon="@Icons.Groups" />
+            <SidebarNavItem Href="/apartments" Label="Mieszkania" Icon="@Icons.Apartments" />
+            <SidebarNavItem Href="/payoffs" Label="Rozliczenia" Icon="@Icons.Payoffs" />
+            <SidebarNavItem Href="/invoices" Label="Faktury" Icon="@Icons.Invoices" />
+        </ul>
+    </nav>
+
+    <footer class="border-t border-slate-800 px-6 py-4">
+        <p class="text-center text-xs text-slate-500">Wersja @Version</p>
+    </footer>
+</aside>
+
+@code {
+    [Parameter] public string Version { get; set; } = "0.1.0";
+}

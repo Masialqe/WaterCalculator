@@ -1,0 +1,72 @@
+﻿@using WaterCalculator.Features.Payoffs.Create
+@inject CreatePayoffHandler CreatePayoffHandler
+
+<SpinnerFallback Message="Zapisywanie..." IsLoading="_state.IsLoading">
+    <EditForm Model="_model" FormName="CreatePayoff" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-slate-300">
+                    Okres rozliczenia
+                </label>
+
+                <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                    <DateInput Id="payoffFrom"
+                               Label=""
+                               @bind-Value="_model.PayoffFrom"
+                               AdditionalClasses="mt-0" />
+
+                    <div class="hidden text-center text-slate-500 sm:block">
+                        -
+                    </div>
+
+                    <DateInput Id="payoffTo"
+                               Label=""
+                               @bind-Value="_model.PayoffTo"
+                               AdditionalClasses="mt-0" />
+                </div>
+            </div>
+
+            @if (_state.IsError)
+            {
+                <ErrorMessage Message="@_state.ErrorMessage" />
+            }
+
+            <div class="flex justify-center pt-2">
+                <PrimaryButton Type="submit" IsLoading="_state.IsLoading">
+                    Zapisz
+                </PrimaryButton>
+            </div>
+        </div>
+    </EditForm>
+</SpinnerFallback>
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public required Guid GroupId { get; set; }
+    [Parameter] public EventCallback OnCreated { get; set; }
+
+    private PayoffFormModel _model = new();
+    private ComponentState _state = new();
+
+    private async Task HandleValidSubmit()
+    {
+        _state.SetLoading();
+
+        var result = await CreatePayoffHandler.HandleAsync(
+            new CreatePayoffCommand(_model.PayoffFrom, _model.PayoffTo, GroupId),
+            CancellationToken);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _model = new();
+        _state.SetSuccess();
+
+        await OnCreated.InvokeAsync();
+    }
+}

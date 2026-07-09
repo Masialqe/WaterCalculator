@@ -1,0 +1,22 @@
+﻿<div class="@ContainerClass">
+    <div class="transition-opacity duration-200 @(IsLoading ? "opacity-30" : "opacity-100")">
+        @ChildContent
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="absolute inset-0 grid place-items-center">
+            <Spinner Message="@Message" Size="@SpinnerSize" />
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string Message { get; set; } = "Ładowanie danych...";
+    [Parameter] public string SpinnerSize { get; set; } = "xl";
+    [Parameter] public string MinHeightClass { get; set; } = "min-h-[12rem]";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string ContainerClass => $"relative {MinHeightClass}";
+}

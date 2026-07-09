@@ -1,0 +1,105 @@
+﻿@page "/groups"
+
+@inject ToastService ToastService
+@inject GetGroupsHandler GetGroupsHandler
+
+@rendermode InteractiveServer
+
+<div class="space-y-6 mb-5">
+    <SectionHeader 
+        SectionTitle="Zarządzanie grupami"
+        SectionDescription="Tworzenie, edycja i organizacja grup mieszkań." />
+</div>
+
+<Box MaxWidth="full" PaddingClass="p-6">
+    <div class="flex flex-col gap-6 p-3">
+        <PrimaryButton OnClick="OpenGroupModal">
+              Dodaj grupę
+        </PrimaryButton>
+        <Separator/>
+        <SpinnerFallback IsLoading="_state.IsLoading" Message="Pobieram liste grup...">
+            @if (_state.IsSuccess)
+            {
+                <GroupsListComponent Groups="_groups"
+                                     CurrentPage="_currentPage"
+                                     PageSize="_pageSize"
+                                     TotalPages="_totalPages"
+                                     OnGroupsChanged="HandlePageChanged" />
+            }
+
+            @if (_state.IsError)
+            {
+                <ErrorMessage Message="@_state.ErrorMessage" />
+            }
+        </SpinnerFallback>
+    </div>
+</Box>
+
+<Modal @ref="_modal" Title="Utwórz grupe" Size="md">
+    <GroupForm OnGroupSaved="HandleGroupSaved" />
+</Modal>
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+
+    private readonly List<Group> _groups = [];
+    private Modal _modal = null!;
+    private ComponentState _state = new();
+
+    private int _currentPage = 1;
+    private int _pageSize = 8;
+    private int _totalPages = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroupsAsync();
+    }
+
+    private async Task LoadGroupsAsync()
+    {
+        _state.SetLoading();
+
+        var result = await GetGroupsHandler.HandleAsync(
+            new GetGroupsQuery(_currentPage, _pageSize),
+            CancellationToken);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _groups.Clear();
+        _groups.AddRange(result.Value.Items);
+
+        _currentPage = result.Value.CurrentPage;
+        _totalPages = result.Value.TotalPages;
+
+        _state.SetSuccess();
+    }
+
+    private async Task HandlePageChanged(int page)
+    {
+        _currentPage = page;
+        await LoadGroupsAsync();
+    }
+
+
+    private async Task OpenGroupModal()
+    {
+        if(_modal is not null)
+        {
+            await _modal.ShowModalAsync();
+        }
+    }
+
+    private async Task HandleGroupSaved()
+    {
+        if (_modal is not null)
+            await _modal.HideModalAsync();
+
+        _currentPage = 1;
+        await LoadGroupsAsync();
+        await ToastService.ShowSuccessAsync("Grupa została zapisana.");
+    }
+}

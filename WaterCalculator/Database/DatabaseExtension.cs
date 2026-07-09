@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WaterCalculator.Common.Infrastructure.AccessControll;
 
 namespace WaterCalculator.Database
 {
@@ -8,10 +9,16 @@ namespace WaterCalculator.Database
         {
             public void AddDatabase()
             {
+                var path = Path.Combine(AppContext.BaseDirectory, "water.db");
+
                 services.AddDbContextFactory<DatabaseContext>(options =>
                 {
-                    //For dev purposes, will be replaced by PostreSQL
-                    options.UseSqlite("Data Source=water.db");
+                    options.UseSqlite($"Data Source={path}");
+                });
+
+                services.AddDbContext<IdentityContext>(options =>
+                {
+                    options.UseSqlite($"Data Source={path}");
                 });
             }
         }
@@ -25,8 +32,10 @@ namespace WaterCalculator.Database
 
                 using var dbContext = dbContextFactory.CreateDbContext();
                 dbContext.Database.Migrate();
+
+                var identityContext = scope.ServiceProvider.GetRequiredService<IdentityContext>();
+                identityContext.Database.Migrate();
             }
         }
-
     }
 }

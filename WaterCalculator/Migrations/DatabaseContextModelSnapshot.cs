@@ -15,7 +15,7 @@ namespace WaterCalculator.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.8");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
 
             modelBuilder.Entity("WaterCalculator.Domain.Apartment", b =>
                 {
@@ -23,6 +23,9 @@ namespace WaterCalculator.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
                         .HasColumnName("apartment_id");
+
+                    b.Property<Guid?>("AccessCodeId")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT")
@@ -43,6 +46,11 @@ namespace WaterCalculator.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("apartment_name");
 
+                    b.Property<string>("PublicToken")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("apartment_public_token");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GroupId");
@@ -50,6 +58,35 @@ namespace WaterCalculator.Migrations
                     b.HasIndex("Name");
 
                     b.ToTable("apartments", (string)null);
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.ApartmentAccessCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("apartment_code_id");
+
+                    b.Property<Guid>("ApartmenId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("apartment_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("apartment_access_code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("apartment_code_created_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApartmenId")
+                        .IsUnique();
+
+                    b.ToTable("apartment_access_code", (string)null);
                 });
 
             modelBuilder.Entity("WaterCalculator.Domain.Group", b =>
@@ -79,7 +116,7 @@ namespace WaterCalculator.Migrations
                     b.ToTable("groups", (string)null);
                 });
 
-            modelBuilder.Entity("WaterCalculator.Domain.Invoice", b =>
+            modelBuilder.Entity("WaterCalculator.Domain.Invoices.Invoice", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -88,6 +125,10 @@ namespace WaterCalculator.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("InvoiceDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("invoice_date");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -101,13 +142,8 @@ namespace WaterCalculator.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("invoice_number");
 
-                    b.Property<DateTime>("PeriodFrom")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("invoice_period_from");
-
-                    b.Property<DateTime>("PeriodTo")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("invoice_period_to");
+                    b.Property<Guid>("PayoffId")
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("TotalConsumption")
                         .HasColumnType("TEXT")
@@ -119,14 +155,113 @@ namespace WaterCalculator.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PeriodFrom");
-
-                    b.HasIndex("PeriodTo");
+                    b.HasIndex("PayoffId")
+                        .IsUnique();
 
                     b.ToTable("invoices", (string)null);
                 });
 
-            modelBuilder.Entity("WaterCalculator.Domain.Read", b =>
+            modelBuilder.Entity("WaterCalculator.Domain.Invoices.InvoiceItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_amount");
+
+                    b.Property<decimal>("BruttoPricePerUnit")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_bruttoprice_per_unit");
+
+                    b.Property<int>("CalculationType")
+                        .HasColumnType("ii_calculation_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_created_at");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_invoice_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_name");
+
+                    b.Property<decimal>("PricePerUnit")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_price_per_unit");
+
+                    b.Property<decimal>("TotalBruttoPrice")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_total_brutto_price");
+
+                    b.Property<decimal>("TotalNettoPrice")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ii_total_netto_price");
+
+                    b.Property<int>("Vat")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ii_vat");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("invoice_items", (string)null);
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.Payoff", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payoff_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payoff_created_at");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("InvoiceId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("PeriodTo")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payoff_period_to");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("payoff_status");
+
+                    b.Property<decimal>("TotalConsumptionValue")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payoff_total_consumption");
+
+                    b.Property<decimal>("TotalMeterValue")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payoff_total_meter_value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Payoffs");
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.Reads.Read", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -137,7 +272,13 @@ namespace WaterCalculator.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("apartment_id");
 
+                    b.Property<decimal>("ConsumptionFromLastRead")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("PayoffId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("ReadDate")
@@ -153,6 +294,8 @@ namespace WaterCalculator.Migrations
                     b.HasIndex("ApartmentId");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("PayoffId");
 
                     b.ToTable("reads", (string)null);
                 });
@@ -183,6 +326,9 @@ namespace WaterCalculator.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("invoice_id");
 
+                    b.Property<Guid>("PayoffId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("RealizationStatus")
                         .HasColumnType("INTEGER")
                         .HasColumnName("realization_status");
@@ -194,6 +340,8 @@ namespace WaterCalculator.Migrations
                     b.HasIndex("CreatedAt");
 
                     b.HasIndex("InvoiceId");
+
+                    b.HasIndex("PayoffId");
 
                     b.ToTable("settlements", (string)null);
                 });
@@ -208,7 +356,51 @@ namespace WaterCalculator.Migrations
                     b.Navigation("Group");
                 });
 
-            modelBuilder.Entity("WaterCalculator.Domain.Read", b =>
+            modelBuilder.Entity("WaterCalculator.Domain.ApartmentAccessCode", b =>
+                {
+                    b.HasOne("WaterCalculator.Domain.Apartment", "Apartment")
+                        .WithOne("AccessCode")
+                        .HasForeignKey("WaterCalculator.Domain.ApartmentAccessCode", "ApartmenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Apartment");
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.Invoices.Invoice", b =>
+                {
+                    b.HasOne("WaterCalculator.Domain.Payoff", "Payoff")
+                        .WithOne("Invoice")
+                        .HasForeignKey("WaterCalculator.Domain.Invoices.Invoice", "PayoffId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Payoff");
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.Invoices.InvoiceItem", b =>
+                {
+                    b.HasOne("WaterCalculator.Domain.Invoices.Invoice", "Invoice")
+                        .WithMany("InvoiceItems")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.Payoff", b =>
+                {
+                    b.HasOne("WaterCalculator.Domain.Group", "Group")
+                        .WithMany("Payoffs")
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.Reads.Read", b =>
                 {
                     b.HasOne("WaterCalculator.Domain.Apartment", "Apartment")
                         .WithMany("Reads")
@@ -216,7 +408,14 @@ namespace WaterCalculator.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("WaterCalculator.Domain.Payoff", "Payoff")
+                        .WithMany("Reads")
+                        .HasForeignKey("PayoffId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Apartment");
+
+                    b.Navigation("Payoff");
                 });
 
             modelBuilder.Entity("WaterCalculator.Domain.Settlement", b =>
@@ -227,19 +426,29 @@ namespace WaterCalculator.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WaterCalculator.Domain.Invoice", "Invoice")
+                    b.HasOne("WaterCalculator.Domain.Invoices.Invoice", "Invoice")
                         .WithMany("Settlements")
                         .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("WaterCalculator.Domain.Payoff", "Payoff")
+                        .WithMany("Settlements")
+                        .HasForeignKey("PayoffId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.Navigation("Apartment");
 
                     b.Navigation("Invoice");
+
+                    b.Navigation("Payoff");
                 });
 
             modelBuilder.Entity("WaterCalculator.Domain.Apartment", b =>
                 {
+                    b.Navigation("AccessCode");
+
                     b.Navigation("Reads");
 
                     b.Navigation("Settlements");
@@ -248,10 +457,23 @@ namespace WaterCalculator.Migrations
             modelBuilder.Entity("WaterCalculator.Domain.Group", b =>
                 {
                     b.Navigation("Apartments");
+
+                    b.Navigation("Payoffs");
                 });
 
-            modelBuilder.Entity("WaterCalculator.Domain.Invoice", b =>
+            modelBuilder.Entity("WaterCalculator.Domain.Invoices.Invoice", b =>
                 {
+                    b.Navigation("InvoiceItems");
+
+                    b.Navigation("Settlements");
+                });
+
+            modelBuilder.Entity("WaterCalculator.Domain.Payoff", b =>
+                {
+                    b.Navigation("Invoice");
+
+                    b.Navigation("Reads");
+
                     b.Navigation("Settlements");
                 });
 #pragma warning restore 612, 618

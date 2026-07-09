@@ -1,0 +1,19 @@
+﻿<td class="@CssClass">
+    @ChildContent
+</td>
+
+@code {
+    [Parameter] public string Align { get; set; } = "left";
+    [Parameter] public string AdditionalClasses { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string CssClass =>
+        $"px-4 py-4 text-sm {GetAlignClass()} {AdditionalClasses}".Trim();
+
+    private string GetAlignClass() => Align switch
+    {
+        "center" => "text-center",
+        "right" => "text-right",
+        _ => "text-left"
+    };
+}

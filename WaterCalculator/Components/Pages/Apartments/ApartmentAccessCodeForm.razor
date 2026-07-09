@@ -1,0 +1,88 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject NavigationManager Navigation
+
+<div class="w-full max-w-md">
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/40 p-6">
+        <EditForm Model="Input" FormName="apartment-access" OnValidSubmit="SubmitAsync" method="post">
+            <DataAnnotationsValidator />
+
+            <div class="mb-8 text-center">
+                <h1 class="text-3xl font-bold tracking-tight text-slate-100">
+                    Dostęp do mieszkania
+                </h1>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <label for="accessCode" class="block text-sm font-medium text-slate-300">
+                        Kod dostępu
+                    </label>
+
+                    <InputText id="accessCode"
+                               type="password"
+                               class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+                               @bind-Value="Input.Code"
+                               autocomplete="one-time-code"
+                               placeholder="••••••••" />
+
+                    <ValidationMessage For="() => Input.Code" class="mt-1 text-sm text-red-300" />
+                </div>
+
+                <div class="absolute -left-[9999px] top-auto h-px w-px overflow-hidden">
+                    <InputText id="website"
+                               @bind-Value="Input.Website"
+                               autocomplete="off"
+                               tabindex="-1" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_errorMessage))
+                {
+                    <ErrorMessage Message="@_errorMessage" />
+                }
+
+                <PrimaryButton Type="submit">
+                    Przejdź dalej
+                </PrimaryButton>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Token { get; set; } = default!;
+
+    [SupplyParameterFromForm] private AccessCodeInput Input { get; set; } = new();
+
+    private string? _errorMessage;
+
+    private async Task SubmitAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(Input.Website))
+        {
+            await Task.Delay(Random.Shared.Next(1000, 3000));
+            _errorMessage = "Nieprawidłowy kod dostępu.";
+            return;
+        }
+
+        // MVP: na razie bez prawdziwej walidacji.
+        // Potem tutaj wejdzie handler VerifyApartmentAccessCodeHandler.
+        if (Input.Code != "123456")
+        {
+            _errorMessage = "Nieprawidłowy kod dostępu.";
+            return;
+        }
+
+        Navigation.NavigateTo($"/apartments/{Token}", forceLoad: true);
+    }
+
+    private sealed class AccessCodeInput
+    {
+        [Required(ErrorMessage = "Podaj kod dostępu.")]
+        public string Code { get; set; } = string.Empty;
+
+        // Honeypot
+        public string? Website { get; set; }
+    }
+}

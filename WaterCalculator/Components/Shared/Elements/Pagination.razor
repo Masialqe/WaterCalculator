@@ -1,0 +1,51 @@
+﻿<nav aria-label="Paginacja">
+    <div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <p class="text-sm text-slate-400">
+            Strona <span class="font-medium text-slate-200">@CurrentPage</span> z
+            <span class="font-medium text-slate-200">@TotalPages</span>
+        </p>
+
+        <div class="flex items-center gap-2">
+            <button type="button"
+                    class="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    @onclick="() => ChangePage(CurrentPage - 1)"
+                    disabled="@(CurrentPage <= 1)">
+                Poprzednia
+            </button>
+
+            @for (var page = 1; page <= TotalPages; page++)
+            {
+                var current = page;
+
+                <button type="button"
+                        class="rounded-xl border px-3 py-2 text-sm transition @(current == CurrentPage
+                                                    ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300"
+                                                    : "border-slate-700 text-slate-300 hover:bg-slate-800")"
+                @onclick="() => ChangePage(current)">
+            @current
+        </button>
+    }
+
+    <button type="button"
+            class="rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+            @onclick="() => ChangePage(CurrentPage + 1)"
+            disabled="@(CurrentPage >= TotalPages)">
+        Następna
+    </button>
+</div>
+</div>
+</nav>
+
+@code {
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int TotalPages { get; set; } = 1;
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+
+    private async Task ChangePage(int page)
+    {
+        if (page < 1 || page > TotalPages || page == CurrentPage)
+            return;
+
+        await OnPageChanged.InvokeAsync(page);
+    }
+}

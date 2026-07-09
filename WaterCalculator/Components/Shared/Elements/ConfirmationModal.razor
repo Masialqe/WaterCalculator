@@ -1,0 +1,132 @@
+﻿@if (_isOpen)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="@_titleId"
+         @onclick="HandleBackdropClick">
+
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
+
+        <div class="@ModalContainerClass"
+             @onclick:stopPropagation="true">
+            <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+                <h2 id="@_titleId" class="text-lg font-semibold text-white">
+                    @Title
+                </h2>
+
+                <button type="button"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        aria-label="Zamknij okno"
+                        @onclick="HideAsync">
+                    <span aria-hidden="true" class="text-xl leading-none">&times;</span>
+                </button>
+            </div>
+
+            <div class="px-5 py-4">
+                @if (!string.IsNullOrWhiteSpace(Message))
+                {
+                    <p class="text-sm leading-6 text-slate-300">
+                        @Message
+                    </p>
+                }
+
+                @if (ChildContent is not null)
+                {
+                    <div class="mt-4">
+                        @ChildContent
+                    </div>
+                }
+            </div>
+
+            <div class="flex justify-end gap-3 border-t border-slate-800 px-5 py-4">
+                <button type="button"
+                        class="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+                        @onclick="HideAsync">
+                    @CancelText
+                </button>
+
+                <button type="button"
+                        class="rounded-xl border border-rose-500/40 px-4 py-2 text-sm font-medium text-rose-300 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled="@_isSubmitting"
+                        @onclick="ConfirmAsync">
+                    @if (_isSubmitting)
+                    {
+                        @* <span class="inline-flex items-center gap-2">
+                            <svg class="h-4 w-4 animate-spin"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 fill="none"
+                                 viewBox="0 0 24 24">
+                                <circle class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4" />
+                                <path class="opacity-90"
+                                      fill="currentColor"
+                                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                            </svg>
+                            Trwa...
+                        </span> *@
+                        <Spinner Message="Procedowanie..."/>
+                    }
+                    else
+                    {
+                        @ConfirmText
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "Potwierdzenie";
+    [Parameter] public string Message { get; set; } = "Czy na pewno chcesz wykonać tę akcję?";
+    [Parameter] public string ConfirmText { get; set; } = "Akceptuj";
+    [Parameter] public string CancelText { get; set; } = "Anuluj";
+    [Parameter] public bool CloseOnBackdropClick { get; set; } = true;
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private readonly string _titleId = $"confirmation-modal-title-{Guid.NewGuid():N}";
+    private bool _isOpen;
+    private bool _isSubmitting;
+
+    public Task ShowAsync()
+    {
+        _isOpen = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public Task HideAsync()
+    {
+        _isOpen = false;
+        _isSubmitting = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task HandleBackdropClick()
+        => CloseOnBackdropClick ? HideAsync() : Task.CompletedTask;
+
+    private async Task ConfirmAsync()
+    {
+        if (_isSubmitting)
+            return;
+
+        _isSubmitting = true;
+        StateHasChanged();
+
+        await OnConfirm.InvokeAsync();
+
+        _isSubmitting = false;
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    private string ModalContainerClass =>
+        "relative z-10 w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 text-slate-100 shadow-2xl shadow-black/50";
+}

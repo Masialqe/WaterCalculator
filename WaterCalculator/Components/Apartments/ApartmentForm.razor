@@ -1,0 +1,93 @@
+﻿@inject UpsertApartmentHandler CreateApartmentHandler
+@inject GetApartmentByIdHandler GetApartmentByIdHandler
+
+<SpinnerFallback Message="Zapisywanie..." IsLoading="_state.IsLoading">
+    <EditForm Model="_model" FormName="CreateApartment" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="space-y-5">
+            <TextInput Id="name"
+                       Label="Nazwa mieszkania"
+                       Placeholder="Np. Mieszkanie 12"
+                       @bind-Value="_model.Name" />
+
+            <TextInput Id="description"
+                       Label="Opis"
+                       Placeholder="Krótki opis mieszkania"
+                       @bind-Value="_model.Description" />
+
+            <div>
+                <GroupDictionary @bind-Value="_model.GroupId" />
+                <ValidationMessage For="@(() => _model.GroupId)" class="mt-1 text-sm text-red-300" />
+            </div>
+
+            @if (_state.IsError)
+            {
+                <ErrorMessage Message="@_state.ErrorMessage" />
+            }
+
+            <div class="flex justify-center pt-2">
+                <PrimaryButton Type="submit" IsLoading="_state.IsLoading">
+                    Dodaj mieszkanie
+                </PrimaryButton>
+            </div>
+        </div>
+    </EditForm>
+</SpinnerFallback>
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public EventCallback<Guid> OnApartmentSaved { get; set; }
+    [Parameter] public Guid? ApartmentId { get; set; }
+
+    private ApartmentFormModel _model = new();
+    private ComponentState _state = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ApartmentId is not null && ApartmentId != Guid.Empty)
+        {
+            _state.SetLoading();
+
+            var result = await GetApartmentByIdHandler.HandleAsync((Guid)ApartmentId, CancellationToken);
+            if (result.IsFailure)
+            {
+                _state.SetError(result.Error.ErrorDescription);
+                return;
+            }
+
+            _model = new ApartmentFormModel
+            {
+                Name = result.Value.Name,
+                Description = result.Value.Details,
+                GroupId = result.Value.GroupId ?? Guid.Empty
+            };
+
+            _state.EndLoading();
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        _state.SetLoading();
+
+        var result = await CreateApartmentHandler.HandleAsync(
+            new UpsertApartmentCommand(
+                _model.Name,
+                _model.Description,
+                _model.GroupId,
+                ApartmentId),
+            CancellationToken);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _state.SetSuccess();
+        _model = new();
+
+        await OnApartmentSaved.InvokeAsync(result.Value);
+    }
+}

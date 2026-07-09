@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WaterCalculator.Domain;
+using WaterCalculator.Domain.Invoices;
 
 namespace WaterCalculator.Database.Configuration
 {
@@ -25,16 +25,16 @@ namespace WaterCalculator.Database.Configuration
 
             builder.Property(i => i.TotalPrice).HasColumnName("invoice_total_price");
             builder.Property(i => i.TotalConsumption).HasColumnName("invoice_total_consumption");
-            builder.Property(i => i.PeriodFrom).HasColumnName("invoice_period_from");
-            builder.Property(i => i.PeriodTo).HasColumnName("invoice_period_to");
+
+            builder.Property(i => i.InvoiceDate).HasColumnName("invoice_date");
+
 
             builder.HasMany(i => i.Settlements)
                     .WithOne(s => s.Invoice)
                     .HasForeignKey(s => s.InvoiceId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasIndex(i => i.PeriodFrom);
-            builder.HasIndex(i => i.PeriodTo);
+            //builder.HasIndex(i => i.PayoffId);
         }
     }
 }

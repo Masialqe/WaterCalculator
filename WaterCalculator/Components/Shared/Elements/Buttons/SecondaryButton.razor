@@ -1,0 +1,17 @@
+﻿<button type="@Type"
+        class="@CssClass"
+        disabled="@Disabled"
+        @onclick="OnClick">
+    @ChildContent
+</button>
+
+@code {
+    [Parameter] public string Type { get; set; } = "button";
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string AdditionalClasses { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private string CssClass =>
+        $"rounded-xl border border-amber-500/40 px-3 py-2 text-sm font-medium text-amber-300 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50 {AdditionalClasses}".Trim();
+}

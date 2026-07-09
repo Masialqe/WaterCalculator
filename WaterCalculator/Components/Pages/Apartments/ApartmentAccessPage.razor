@@ -1,0 +1,10 @@
+﻿@page "/apartments/{Token}/access"
+@layout NoAuthLayout
+
+@attribute [EnableRateLimiting("public-forms")]
+
+<ApartmentAccessCodeForm Token="@Token" />
+
+@code {
+    [Parameter] public string Token { get; set; } = default!;
+}

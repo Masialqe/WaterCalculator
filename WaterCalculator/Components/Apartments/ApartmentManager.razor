@@ -1,0 +1,74 @@
+﻿@using WaterCalculator.Components.Reads
+
+<div class="w-full">
+    @if (_currentStep == ApartmentManagerStep.Apartment)
+    {
+        <div class="animate-in fade-in duration-200">
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold tracking-tight text-white">
+                    Krok 1. Dodaj mieszkanie
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-slate-400">
+                    Najpierw zapisz mieszkanie, a w kolejnym kroku opcjonalnie dodasz pierwszy odczyt.
+                </p>
+            </div>
+
+            <ApartmentForm OnApartmentSaved="HandleApartmentCreated" />
+        </div>
+    }
+    else if (_currentStep == ApartmentManagerStep.FirstRead && _createdApartmentId.HasValue)
+    {
+        <div class="animate-in fade-in duration-200">
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold tracking-tight text-white">
+                    Krok 2. Dodaj pierwszy odczyt
+                </h3>
+                <p class="mt-2 text-sm leading-6 text-slate-400">
+                    Ten krok jest opcjonalny. Możesz dodać pierwszy odczyt teraz albo pominąć go na później.
+                </p>
+            </div>
+
+            <CreateReadForm ApartmentId="_createdApartmentId.Value" OnReadCreated="HandleReadCreated" />
+
+            <div class="mt-4 flex justify-center">
+                <button type="button"
+                        class="rounded-xl border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                        @onclick="SkipReadStep">
+                    Pomiń ten krok
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<bool> OnApartmentSaved { get; set; }
+    private Guid? _createdApartmentId;
+    private ApartmentManagerStep _currentStep = ApartmentManagerStep.Apartment;
+    private bool _readCreated;
+
+    private Task HandleApartmentCreated(Guid apartmentId)
+    {
+        _createdApartmentId = apartmentId;
+        _currentStep = ApartmentManagerStep.FirstRead;
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleReadCreated()
+    {
+        _readCreated = true;
+        await OnApartmentSaved.InvokeAsync(_readCreated);
+    }
+
+    private async Task SkipReadStep()
+    {
+        _readCreated = false;
+        await OnApartmentSaved.InvokeAsync(_readCreated);
+    }
+
+    private enum ApartmentManagerStep
+    {
+        Apartment = 1,
+        FirstRead = 2
+    }
+}

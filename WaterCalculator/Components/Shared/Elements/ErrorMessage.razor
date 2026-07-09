@@ -1,0 +1,10 @@
+﻿@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="mb-4 rounded-lg border border-red-900/60 bg-red-950/50 px-4 py-3 text-sm text-red-200">
+        @Message
+    </div>
+}
+
+@code {
+    [Parameter] public required string Message { get; set; } = string.Empty;
+}

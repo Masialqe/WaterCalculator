@@ -1,0 +1,99 @@
+﻿<div class="space-y-6">
+    <div class="text-left">
+        <h3 class="text-xl font-semibold tracking-tight text-white">
+            @GetHeader()
+        </h3>
+        <p class="mt-2 text-sm leading-6 text-slate-400">
+            @GetDescription()
+        </p>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Url))
+    {
+        <div class="space-y-2">
+            <label for="@_urlInputId" class="block text-left text-sm font-medium text-slate-300">
+                Link dostępu
+            </label>
+
+            <div class="flex items-center gap-3">
+                <input id="@_urlInputId"
+                       type="text"
+                       value="@Url"
+                       readonly
+                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" />
+
+                <div class="shrink-0">
+                    <CopyButton 
+                        InputId="@_urlInputId" />
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="space-y-2">
+        <label for="@_codeInputId" class="block text-left text-sm font-medium text-slate-300">
+            Kod dostępu
+        </label>
+
+        <div class="flex items-center gap-3">
+            @if (ShouldShowCode)
+            {
+                <input id="@_codeInputId"
+                       type="text"
+                       value="@Code"
+                       readonly
+                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" />
+
+                <div class="shrink-0">
+                    <CopyButton InputId="@_codeInputId" />
+                </div>
+            }
+            else
+            {
+                <input id="@_codeInputId"
+                       type="password"
+                       value="************"
+                       readonly
+                       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-500 outline-none transition" />
+
+                @if (IsEditMode)
+                {
+                    <div class="shrink-0">
+                        <SuccessButton OnClick="OnGenerateNewCode">
+                            Generuj nowy kod
+                        </SuccessButton>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <ErrorMessage Message="@ErrorMessage" />
+    }
+</div>
+
+@code {
+    [Parameter] public string Code { get; set; } = string.Empty;
+    [Parameter] public string Url { get; set; } = string.Empty;
+    [Parameter] public bool IsEditMode { get; set; }
+    [Parameter] public string ErrorMessage { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnGenerateNewCode { get; set; }
+
+    private readonly string _codeInputId = $"access-code-{Guid.NewGuid():N}";
+    private readonly string _urlInputId = $"access-url-{Guid.NewGuid():N}";
+
+    private bool ShouldShowCode => !string.IsNullOrWhiteSpace(Code);
+
+    private string GetHeader()
+        => IsEditMode
+            ? "Zarządzanie dostępem"
+            : "Dane dostępu zostały przygotowane";
+
+    private string GetDescription()
+        => IsEditMode
+            ? "Możesz skopiować link dostępu. Aby ponownie udostępnić kod, wygeneruj nowy."
+            : "Skopiuj link i kod, a następnie zapisz je w bezpiecznym miejscu.";
+
+}

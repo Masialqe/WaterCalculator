@@ -1,0 +1,26 @@
+﻿@using WaterCalculator.Components.Reads
+<button type="button"
+        class="mt-1 w-fit text-left text-xs font-medium text-rose-300 transition hover:text-rose-200 hover:underline"
+        @onclick="HandleMissingInitialReadClicked">
+    Brak odczytu inicjującego
+</button>
+
+<Modal @ref="_readFormModal" Title="Dodaj pierwszy odczyt">
+    <CreateReadForm 
+        ApartmentId="ApartmentId" 
+        OnReadCreated="HandleFirstReadCreated"/>
+</Modal>
+@code {
+    [Parameter] public required Guid ApartmentId { get; set; }
+    [Parameter] public EventCallback OnFirstReadCreated { get; set; }
+    private Modal _readFormModal = null!;
+
+    private async Task HandleMissingInitialReadClicked()
+        => await _readFormModal.ShowModalAsync();
+
+    private async Task HandleFirstReadCreated()
+    {
+        await OnFirstReadCreated.InvokeAsync();
+        await _readFormModal.HideModalAsync();
+    }
+}

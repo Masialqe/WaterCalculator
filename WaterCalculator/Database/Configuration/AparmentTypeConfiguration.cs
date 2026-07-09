@@ -24,6 +24,10 @@ namespace WaterCalculator.Database.Configuration
 
             builder.Property(x => x.CreatedAt).HasColumnName("apartment_created_at");
 
+            builder.Property(x => x.PublicToken)
+                .HasMaxLength(255)
+                .HasColumnName("apartment_public_token");
+
             builder.HasMany(x => x.Reads)
                 .WithOne(x => x.Apartment)
                 .HasForeignKey(x => x.ApartmentId)
@@ -32,6 +36,11 @@ namespace WaterCalculator.Database.Configuration
             builder.HasMany(x => x.Settlements)
                 .WithOne(x => x.Apartment)
                 .HasForeignKey(x => x.ApartmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(a => a.AccessCode)
+                .WithOne(ac => ac.Apartment)
+                .HasForeignKey<ApartmentAccessCode>(ac => ac.ApartmenId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(x => x.Name);

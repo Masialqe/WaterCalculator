@@ -1,0 +1,21 @@
+﻿<div class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/30">
+    <div class="overflow-x-auto">
+        <table class="min-w-full table-auto">
+            @if (HeaderTemplate is not null)
+            {
+                <thead class="border-b border-slate-800 bg-slate-900/90">
+                    @HeaderTemplate
+                </thead>
+            }
+
+            <tbody class="divide-y divide-slate-800">
+                @BodyTemplate
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
+    [Parameter] public RenderFragment? BodyTemplate { get; set; }
+}

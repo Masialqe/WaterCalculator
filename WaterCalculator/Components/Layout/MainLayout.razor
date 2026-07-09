@@ -1,9 +1,23 @@
-﻿@inherits LayoutComponentBase
+﻿@using WaterCalculator.Components.Layout.Main
+@using WaterCalculator.Components.Shared.Toast
+@inherits LayoutComponentBase
 
-@Body
+<div class="h-dvh overflow-hidden bg-slate-950 text-slate-100">
+    <div class="flex h-full overflow-hidden">
+        <SidebarNav Version="0.1.0" />
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+        <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+            <MobileNav />
+            <ToastHost />
+            
+
+            <main class="min-w-0 flex-1 overflow-x-hidden overflow-y-auto" aria-label="Obszar roboczy">
+                <div class="mx-auto w-full max-w-7xl p-4 sm:p-6">
+                    @Body
+                </div>
+            </main>
+        </div>
+    </div>
 </div>
+
+<AppErrorUi />

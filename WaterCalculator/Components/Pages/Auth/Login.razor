@@ -1,0 +1,87 @@
+﻿@page "/login"
+@using WaterCalculator.Components.Shared.Elements.Inputs
+@layout NoAuthLayout
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+@attribute [EnableRateLimiting("public-forms")]
+
+<div class="w-full max-w-md">
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/40 p-6">
+            
+            <EditForm Model="Input" FormName="login" OnValidSubmit="LoginAsync" method="post">
+                <DataAnnotationsValidator />
+                <div class="space-y-5">
+                    <TextInput Id="email"
+                               Label="Email"
+                               Placeholder="admin@example.com"
+                               Autocomplete="username"
+                               @bind-Value="Input.Email" />
+
+                    <TextInput Id="password"
+                               Label="Hasło"
+                               Placeholder="••••••••"
+                               Autocomplete="current-password"
+                               @bind-Value="Input.Password" />
+
+                    <div class="absolute -left-[9999px] top-auto h-px w-px overflow-hidden">
+                        <InputText id="repeatPassword"
+                                   @bind-Value="Input.RepeatPassword"
+                                   autocomplete="off"
+                                   tabindex="-1" />
+                    </div>
+
+                    <label class="flex items-center justify-center gap-3 text-sm text-slate-300">
+                        <InputCheckbox class="h-4 w-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
+                                       @bind-Value="Input.RememberMe" />
+                        Zapamiętaj mnie
+                    </label>
+
+                    @if (_state.IsError)
+                    {
+                        <ErrorMessage Message="@_state.ErrorMessage" />
+                    }
+
+                    <PrimaryButton Type="submit" IsLoading="_state.IsLoading">
+                        Zaloguj
+                    </PrimaryButton>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+
+@code {
+    [SupplyParameterFromForm] private LoginFormModel Input { get; set; } = new();
+
+    private ComponentState _state = new();
+
+    private async Task LoginAsync()
+    {
+
+        _state.SetLoading();
+
+        if (!string.IsNullOrEmpty(Input.RepeatPassword))
+        {
+            await Task.Delay(Random.Shared.Next(1000, 3000));
+            _state.SetError("Nieprawidłowy email lub hasło.");
+            return;
+        }
+
+        var result = await SignInManager.PasswordSignInAsync(
+            Input.Email,
+            Input.Password,
+            Input.RememberMe,
+            lockoutOnFailure: true);
+
+        if (!result.Succeeded)
+        {
+            await Task.Delay(Random.Shared.Next(500, 1500));
+            _state.SetError("Nieprawidłowy email lub hasło.");
+            return;
+        }
+
+        _state.SetSuccess();
+        Navigation.NavigateTo("/admin", forceLoad: true);
+    }
+}

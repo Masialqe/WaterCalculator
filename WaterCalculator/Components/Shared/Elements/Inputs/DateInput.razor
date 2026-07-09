@@ -1,0 +1,27 @@
+﻿@using System.Linq.Expressions
+
+<div>
+    <label for="@Id" class="block text-sm font-medium text-slate-300">
+        @Label
+    </label>
+
+    <InputDate id="@Id"
+               Value="@Value"
+               ValueChanged="@ValueChanged"
+               ValueExpression="@ValueExpression"
+               class="@InputClass" />
+
+    <ValidationMessage For="@ValueExpression" class="mt-1 text-sm text-red-300" />
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public DateTime Value { get; set; }
+    [Parameter] public EventCallback<DateTime> ValueChanged { get; set; }
+    [Parameter] public Expression<Func<DateTime>> ValueExpression { get; set; } = default!;
+    [Parameter] public string AdditionalClasses { get; set; } = string.Empty;
+
+    private string InputClass =>
+        $"mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 {AdditionalClasses}".Trim();
+}

@@ -1,0 +1,239 @@
+﻿@page "/apartments/{Token}"
+@layout NoAuthLayout
+
+<div class="space-y-6">
+    <div class="flex flex-col gap-2">
+        <h1 class="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            Mieszkanie 12A
+        </h1>
+        <p class="text-sm text-slate-400 sm:text-base">
+            Podgląd zużycia i płatności dla kolejnych okresów rozliczeniowych.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        @* <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-2xl shadow-black/20">
+            <p class="text-sm text-slate-400">Łączne zużycie</p>
+            <p class="mt-2 text-2xl font-semibold text-white">@_rows.Sum(x => x.Consumption) m³</p>
+        </div> *@
+        <Box>
+            <p class="text-sm text-slate-400">Łączne zużycie</p>
+            <p class="mt-2 text-2xl font-semibold text-white">@_rows.Sum(x => x.Consumption) m³</p>
+        </Box>
+
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-2xl shadow-black/20">
+            <p class="text-sm text-slate-400">Łączna kwota</p>
+            <p class="mt-2 text-2xl font-semibold text-white">@_rows.Sum(x => x.Amount).ToString("0.00") zł</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-2xl shadow-black/20">
+            <p class="text-sm text-slate-400">Ostatni status</p>
+            <p class="mt-2 text-2xl font-semibold text-white">@_rows.Last().Status</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20">
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold text-white">Zużycie na okres</h2>
+                <p class="mt-1 text-sm text-slate-400">Wykres liniowy zużycia w m³.</p>
+            </div>
+
+            @* <div class="overflow-x-auto">
+                <svg viewBox="0 0 640 260" class="min-w-[640px]">
+                    <rect x="0" y="0" width="640" height="260" fill="transparent" />
+
+                    @for (var i = 0; i < 5; i++)
+                    {
+                        var y = 30 + i * 45;
+                        <line x1="50" y1="@y" x2="610" y2="@y" stroke="#334155" stroke-width="1" />
+                    }
+
+                    <polyline fill="none"
+                              stroke="#22d3ee"
+                              stroke-width="3"
+                              points="@ConsumptionPoints" />
+
+                    @foreach (var point in ConsumptionDots)
+                    {
+                        <circle cx="@point.X" cy="@point.Y" r="4" fill="#22d3ee" />
+                    }
+
+                    @foreach (var label in XLabels)
+                    {
+                        @label.Text
+                    }
+                </svg>
+            </div> *@
+            <div class="overflow-x-auto">
+                <svg viewBox="0 0 640 260" class="min-w-[640px]">
+                    <rect x="0" y="0" width="640" height="260" fill="transparent" />
+
+                    @for (var i = 0; i < 5; i++)
+                    {
+                        var y = 30 + i * 45;
+                        <line x1="50" y1="@y" x2="610" y2="@y" stroke="#334155" stroke-width="1" />
+                    }
+
+                    @foreach (var bar in ConsumptionBars)
+                    {
+                        <rect x="@bar.X"
+                              y="@bar.Y"
+                              width="42"
+                              height="@bar.Height"
+                              rx="8"
+                              fill="#22d3ee" />
+                    }
+
+                    @foreach (var label in XLabels)
+                    {
+                        @label.Text
+                    }
+                </svg>
+            </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20">
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold text-white">Płatności na okres</h2>
+                <p class="mt-1 text-sm text-slate-400">Wykres słupkowy kwot do zapłaty.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <svg viewBox="0 0 640 260" class="min-w-[640px]">
+                    <rect x="0" y="0" width="640" height="260" fill="transparent" />
+
+                    @for (var i = 0; i < 5; i++)
+                    {
+                        var y = 30 + i * 45;
+                        <line x1="50" y1="@y" x2="610" y2="@y" stroke="#334155" stroke-width="1" />
+                    }
+
+                    @foreach (var bar in PaymentBars)
+                    {
+                        <rect x="@bar.X"
+                              y="@bar.Y"
+                              width="42"
+                              height="@bar.Height"
+                              rx="8"
+                              fill="#818cf8" />
+                    }
+
+                    @foreach (var label in XLabels)
+                    {
+                        @label.Text
+                    }
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20">
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold text-white">Historia rozliczeń</h2>
+            <p class="mt-1 text-sm text-slate-400">Zestawienie okresów, zużycia i płatności.</p>
+        </div>
+
+        <Table>
+            <HeaderTemplate>
+                <tr>
+                    <TableHeaderCell>Okres</TableHeaderCell>
+                    <TableHeaderCell Align="right">Zużycie</TableHeaderCell>
+                    <TableHeaderCell Align="right">Kwota</TableHeaderCell>
+                    <TableHeaderCell Align="center">Status</TableHeaderCell>
+                </tr>
+            </HeaderTemplate>
+
+            <BodyTemplate>
+                @foreach (var row in _rows)
+                {
+                    <tr class="transition hover:bg-slate-900/60">
+                        <TableCell AdditionalClasses="font-medium text-white">
+                            @row.Period
+                        </TableCell>
+
+                        <TableCell Align="right" AdditionalClasses="text-slate-300">
+                            @row.Consumption.ToString("0.##") m³
+                        </TableCell>
+
+                        <TableCell Align="right" AdditionalClasses="text-slate-300">
+                            @row.Amount.ToString("0.00") zł
+                        </TableCell>
+
+                        <TableCell Align="center">
+                            <span class="@GetStatusClass(row.Status)">
+                                @row.Status
+                            </span>
+                        </TableCell>
+                    </tr>
+                }
+            </BodyTemplate>
+        </Table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Token { get; set; } = string.Empty;
+
+    private readonly List<SettlementPreviewRow> _rows =
+    [
+        new("01.2026 - 02.2026", 11.4m, 124.30m, "Opłacone"),
+        new("03.2026 - 04.2026", 9.8m, 109.90m, "Opłacone"),
+        new("05.2026 - 06.2026", 13.2m, 142.50m, "Oczekujące"),
+        new("07.2026 - 08.2026", 10.7m, 118.10m, "Oczekujące"),
+        new("09.2026 - 10.2026", 14.1m, 151.40m, "Oczekujące")
+    ];
+
+    private List<BarPoint> ConsumptionBars
+    {
+        get
+        {
+            var max = _rows.Max(x => x.Consumption);
+            var stepX = 560m / Math.Max(_rows.Count, 1);
+
+            return _rows
+                .Select((x, i) =>
+                {
+                    var height = max == 0 ? 0 : (x.Consumption / max) * 160m;
+                    return new BarPoint(
+                        70m + (stepX * i),
+                        210m - height,
+                        height);
+                })
+                .ToList();
+        }
+    }
+
+    private List<BarPoint> PaymentBars
+    {
+        get
+        {
+            var max = _rows.Max(x => x.Amount);
+            var stepX = 560m / Math.Max(_rows.Count, 1);
+
+            return _rows
+                .Select((x, i) =>
+                {
+                    var height = max == 0 ? 0 : (x.Amount / max) * 160m;
+                    return new BarPoint(
+                        70m + (stepX * i),
+                        210m - height,
+                        height);
+                })
+                .ToList();
+        }
+    }
+
+    private List<XAxisLabel> XLabels
+        => _rows.Select((x, i) => new XAxisLabel(70 + (560m / Math.Max(_rows.Count - 1, 1)) * i, $"P{i + 1}")).ToList();
+
+    private static string GetStatusClass(string status)
+        => status == "Opłacone"
+            ? "inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200"
+            : "inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200";
+
+    private sealed record SettlementPreviewRow(string Period, decimal Consumption, decimal Amount, string Status);
+    private sealed record ChartPoint(decimal X, decimal Y);
+    private sealed record BarPoint(decimal X, decimal Y, decimal Height);
+    private sealed record XAxisLabel(decimal X, string Text);
+}

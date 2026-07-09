@@ -1,0 +1,106 @@
+﻿@page "/apartments"
+
+@inject ToastService ToastService
+@inject GetApartmentsHandler GetApartmentsHandler
+
+@rendermode InteractiveServer
+
+<div class="space-y-6 mb-5">
+    <SectionHeader SectionTitle="Zarządzanie mieszkaniami"
+                   SectionDescription="Tworzenie, edycja i organizacja mieszkań." />
+</div>
+
+<Box MaxWidth="full" PaddingClass="p-6">
+    <div class="flex flex-col gap-6 p-3">
+        <PrimaryButton OnClick="OpenCreateApartmentModal">
+            Dodaj mieszkanie
+        </PrimaryButton>
+        <Separator />
+        <SpinnerFallback IsLoading="_state.IsLoading" Message="Pobieram liste mieszkań...">
+            @if (_state.IsSuccess)
+            {
+                <ApartmentsListComponent Apartments="_apartments"
+                                     CurrentPage="_currentPage"
+                                     PageSize="_pageSize"
+                                     TotalPages="_totalPages"
+                                     OnApartmentChanged="HandleApartmentsChanged" />
+            }
+
+            @if (_state.IsError)
+            {
+                <ErrorMessage Message="@_state.ErrorMessage" />
+            }
+        </SpinnerFallback>
+    </div>
+</Box>
+
+<Modal @ref="_createApartmentModal" Title="Utwórz mieszkanie" Size="md">
+    <ApartmentManager OnApartmentSaved="HandleApartmentSaved"/>
+</Modal>
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+
+    private readonly List<ApartmentListItem> _apartments = [];
+    private Modal _createApartmentModal = null!;
+    private ComponentState _state = new();
+
+    private int _currentPage = 1;
+    private int _pageSize = 8;
+    private int _totalPages = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadApartmentsAsync();
+    }
+
+    private async Task LoadApartmentsAsync()
+    {
+        _state.SetLoading();
+
+        var result = await GetApartmentsHandler.HandleAsync(
+            new GetApartmentsQuery(_currentPage, _pageSize),
+            CancellationToken);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _apartments.Clear();
+        _apartments.AddRange(result.Value.Items);
+
+        _currentPage = result.Value.CurrentPage;
+        _totalPages = result.Value.TotalPages;
+
+        _state.SetSuccess();
+    }
+
+    private async Task HandleApartmentsChanged(int page)
+    {
+        _currentPage = page;
+        await LoadApartmentsAsync();
+    }
+
+
+    private async Task OpenCreateApartmentModal()
+    {
+        if (_createApartmentModal is not null)
+        {
+            await _createApartmentModal.ShowModalAsync();
+        }
+    }
+
+    private async Task HandleApartmentSaved(bool withRead)
+    {
+        if (_createApartmentModal is not null)
+            await _createApartmentModal.HideModalAsync();
+
+        _currentPage = 1;
+        await LoadApartmentsAsync();
+        await ToastService.ShowSuccessAsync(withRead 
+            ? "Mieszkanie z pierwszym odczytem zapisane pomyślnie." 
+            : "Mieszkanie zapisany pomyślnie.");
+    }
+}

@@ -1,0 +1,400 @@
+﻿@using WaterCalculator.Domain.Invoices
+
+<div class="space-y-6">
+    <div class="flex items-center justify-center xl:hidden">
+        <div class="inline-flex rounded-2xl border border-slate-800 bg-slate-900/70 p-1">
+            <button type="button"
+                    class="@GetMobileTabClass(MobileTab.Form)"
+                    @onclick="() => SetMobileTab(MobileTab.Form)">
+                Formularz
+            </button>
+
+            <button type="button"
+                    class="@GetMobileTabClass(MobileTab.Preview)"
+                    @onclick="() => SetMobileTab(MobileTab.Preview)">
+                Podgląd
+            </button>
+        </div>
+    </div>
+
+    <div class="hidden grid-cols-1 gap-6 xl:grid xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+        <div class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20">
+            <div class="text-left">
+                <h3 class="text-lg font-semibold text-white">
+                    @(_isEditing ? "Edytuj pozycję" : "Dodaj pozycję")
+                </h3>
+                <p class="mt-1 text-sm text-slate-400">
+                    Uzupełnij dane pozycji faktury.
+                </p>
+            </div>
+
+            <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="CreateInvoiceItem">
+                <DataAnnotationsValidator />
+
+                <div class="space-y-5">
+                    <TextInput Id="itemName"
+                               Label="Nazwa"
+                               @bind-Value="_model.Name" />
+
+                    <NumberInput Id="itemAmount"
+                                 Label="Ilość"
+                                 @bind-Value="_model.Amount" />
+
+                    <NumberInput Id="itemPricePerUnit"
+                                 Label="Cena jednostkowa"
+                                 @bind-Value="_model.PricePerUnit" />
+
+                    <NumberInput Id="itemVat"
+                                 Label="VAT"
+                                 @bind-Value="_model.Vat" />
+
+                    <div>
+                        <label for="calculationType" class="block text-sm font-medium text-slate-300">
+                            Typ rozliczenia
+                        </label>
+
+                        <InputSelect TValue="CalculationType"
+                                     id="calculationType"
+                                     class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+                                     @bind-Value="_model.CalculationType">
+                            @foreach (var type in Enum.GetValues<CalculationType>())
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div class="flex justify-center pt-2">
+                        <PrimaryButton Type="submit">
+                            @(_isEditing ? "Zapisz zmiany" : "Dodaj pozycję")
+                        </PrimaryButton>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-2xl shadow-black/20">
+            <div class="mb-4 text-left">
+                <h3 class="text-lg font-semibold text-white">
+                    Pozycje faktury
+                </h3>
+                <p class="mt-1 text-sm text-slate-400">
+                    Liczba pozycji: @Items.Count
+                </p>
+            </div>
+
+            @DesktopItemsPanel
+        </div>
+    </div>
+
+    <div class="space-y-4 xl:hidden">
+        @if (_mobileTab == MobileTab.Form)
+        {
+            <div class="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-2xl shadow-black/20">
+                <div class="text-left">
+                    <h3 class="text-lg font-semibold text-white">
+                        @(_isEditing ? "Edytuj pozycję" : "Dodaj pozycję")
+                    </h3>
+                    <p class="mt-1 text-sm text-slate-400">
+                        Uzupełnij dane pozycji faktury.
+                    </p>
+                </div>
+
+                <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="CreateInvoiceItemMobile">
+                    <DataAnnotationsValidator />
+
+                    <div class="space-y-5">
+                        <TextInput Id="itemNameMobile"
+                                   Label="Nazwa"
+                                   @bind-Value="_model.Name" />
+
+                        <NumberInput Id="itemAmountMobile"
+                                     Label="Ilość"
+                                     @bind-Value="_model.Amount" />
+
+                        <NumberInput Id="itemPricePerUnitMobile"
+                                     Label="Cena jednostkowa"
+                                     @bind-Value="_model.PricePerUnit" />
+
+                        <NumberInput Id="itemVatMobile"
+                                     Label="VAT"
+                                     @bind-Value="_model.Vat" />
+
+                        <div>
+                            <label for="calculationTypeMobile" class="block text-sm font-medium text-slate-300">
+                                Typ rozliczenia
+                            </label>
+
+                            <InputSelect TValue="CalculationType"
+                                         id="calculationTypeMobile"
+                                         class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+                                         @bind-Value="_model.CalculationType">
+                                @foreach (var type in Enum.GetValues<CalculationType>())
+                                {
+                                    <option value="@type">@type.GetDisplayName()</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="flex justify-center pt-2">
+                            <PrimaryButton Type="submit" AdditionalClasses="w-full">
+                                @(_isEditing ? "Zapisz zmiany" : "Dodaj pozycję")
+                            </PrimaryButton>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        }
+        else
+        {
+            <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-2xl shadow-black/20">
+                <div class="mb-4 text-left">
+                    <h3 class="text-lg font-semibold text-white">
+                        Pozycje faktury
+                    </h3>
+                    <p class="mt-1 text-sm text-slate-400">
+                        Liczba pozycji: @Items.Count
+                    </p>
+                </div>
+
+                @MobileItemsPanel
+            </div>
+        }
+    </div>
+
+    <div class="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-center">
+        <SecondaryButton OnClick="OnBack" AdditionalClasses="w-full sm:w-auto">
+            Powrót
+        </SecondaryButton>
+
+        @if (!IsPreview)
+        {
+            <SuccessButton OnClick="OnSave"
+                           Disabled="@(!Items.Any())"
+                           AdditionalClasses="w-full sm:w-auto">
+                Zapisz fakturę
+            </SuccessButton>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<CreateInvoiceItemFormModel> Items { get; set; } = new();
+    [Parameter] public bool IsPreview { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    private CreateInvoiceItemFormModel _model = new();
+    private bool _isEditing;
+    private CreateInvoiceItemFormModel? _editedItem;
+    private MobileTab _mobileTab = MobileTab.Form;
+
+    private enum MobileTab
+    {
+        Form,
+        Preview
+    }
+
+    private void SetMobileTab(MobileTab tab)
+    {
+        _mobileTab = tab;
+    }
+
+    private string GetMobileTabClass(MobileTab tab)
+    {
+        var isActive = _mobileTab == tab;
+
+        return isActive
+            ? "rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-300 transition"
+            : "rounded-xl border border-transparent px-4 py-2 text-sm font-medium text-slate-400 transition hover:text-slate-200";
+    }
+
+    private RenderFragment DesktopItemsPanel => @<div class="flex h-[32rem] flex-col">
+        <div class="flex-1 overflow-y-auto">
+            @if (Items.Count == 0)
+            {
+                <div class="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-5 text-sm text-slate-400">
+                    Brak dodanych pozycji.
+                </div>
+            }
+            else
+            {
+                <div class="space-y-3 pr-1">
+                    @foreach (var item in Items)
+                    {
+                        <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div class="space-y-1">
+                                    <p class="font-medium text-white">@item.Name</p>
+                                    <p class="text-sm text-slate-400">
+                                        Cena netto: @item.TotalNettoPrice
+                                    </p>
+                                    <p class="text-sm text-slate-400">
+                                        Cena brutto: @item.TotalBruttoPrice
+                                    </p>
+                                    <p class="mb-2 text-sm text-slate-400">
+                                        VAT @item.Vat%
+                                    </p>
+                                    <div class="flex w-full justify-center pt-1">
+                                        <span class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200">
+                                            @item.CalculationType.GetDisplayName()
+                                        </span>
+                                    </div>
+                                </div>
+
+                                @if (!IsPreview)
+                                {
+                                    <div class="flex gap-2 sm:justify-end">
+                                        <SecondaryButton OnClick="() => Edit(item)">
+                                            Edytuj
+                                        </SecondaryButton>
+
+                                        <DangerButton OnClick="() => Delete(item)">
+                                            Usuń
+                                        </DangerButton>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="mt-4 border-t border-slate-800 pt-4">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-slate-400">
+                    Suma brutto faktury
+                </span>
+                <span class="text-lg font-semibold text-white">
+                    @Items.Sum(x => x.TotalBruttoPrice)
+                </span>
+            </div>
+        </div>
+    </div>;
+
+    private RenderFragment MobileItemsPanel => @<div class="flex h-[28rem] flex-col">
+        <div class="flex-1 overflow-y-auto">
+            @if (Items.Count == 0)
+            {
+                <div class="rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-5 text-sm text-slate-400">
+                    Brak dodanych pozycji.
+                </div>
+            }
+            else
+            {
+                <div class="space-y-3 pr-1">
+                    @foreach (var item in Items)
+                    {
+                        <div class="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                            <div class="space-y-3">
+                                <div>
+                                    <p class="break-words font-medium text-white">@item.Name</p>
+                                </div>
+
+                                <div class="grid grid-cols-1 gap-2">
+                                    <div class="rounded-xl bg-slate-900/70 px-3 py-2">
+                                        <p class="text-xs uppercase tracking-wide text-slate-500">Cena netto</p>
+                                        <p class="mt-1 text-sm font-medium text-slate-200">@item.TotalNettoPrice</p>
+                                    </div>
+
+                                    <div class="rounded-xl bg-slate-900/70 px-3 py-2">
+                                        <p class="text-xs uppercase tracking-wide text-slate-500">Cena brutto</p>
+                                        <p class="mt-1 text-sm font-medium text-slate-200">@item.TotalBruttoPrice</p>
+                                    </div>
+
+                                    <div class="rounded-xl bg-slate-900/70 px-3 py-2">
+                                        <p class="text-xs uppercase tracking-wide text-slate-500">VAT</p>
+                                        <p class="mt-1 text-sm font-medium text-slate-200">@item.Vat%</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-start">
+                                    <span class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                                        @item.CalculationType.GetDisplayName()
+                                    </span>
+                                </div>
+
+                                @if (!IsPreview)
+                                {
+                                    <div class="flex flex-col gap-2 pt-1">
+                                        <SecondaryButton OnClick="() => Edit(item)" AdditionalClasses="w-full">
+                                            Edytuj
+                                        </SecondaryButton>
+
+                                        <DangerButton OnClick="() => Delete(item)" AdditionalClasses="w-full">
+                                            Usuń
+                                        </DangerButton>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="mt-4 border-t border-slate-800 pt-4">
+            <div class="flex items-center justify-between gap-3">
+                <span class="text-sm font-medium text-slate-400">
+                    Suma brutto
+                </span>
+                <span class="text-base font-semibold text-white">
+                    @Items.Sum(x => x.TotalBruttoPrice)
+                </span>
+            </div>
+        </div>
+    </div>;
+
+    private void HandleValidSubmit()
+    {
+        if (_isEditing)
+        {
+            _editedItem!.Name = _model.Name;
+            _editedItem.Amount = _model.Amount;
+            _editedItem.PricePerUnit = _model.PricePerUnit;
+            _editedItem.Vat = _model.Vat;
+            _editedItem.CalculationType = _model.CalculationType;
+
+            _isEditing = false;
+            _editedItem = null;
+        }
+        else
+        {
+            Items.Add(new CreateInvoiceItemFormModel
+            {
+                Name = _model.Name,
+                Amount = _model.Amount,
+                PricePerUnit = _model.PricePerUnit,
+                Vat = _model.Vat,
+                CalculationType = _model.CalculationType
+            });
+
+            _mobileTab = MobileTab.Preview;
+        }
+
+        _model = new();
+    }
+
+    private void Delete(CreateInvoiceItemFormModel item)
+    {
+        Items.Remove(item);
+    }
+
+    private void Edit(CreateInvoiceItemFormModel item)
+    {
+        _editedItem = item;
+
+        _model = new CreateInvoiceItemFormModel
+        {
+            Name = item.Name,
+            Amount = item.Amount,
+            PricePerUnit = item.PricePerUnit,
+            Vat = item.Vat,
+            CalculationType = item.CalculationType
+        };
+
+        _isEditing = true;
+        _mobileTab = MobileTab.Form;
+    }
+}

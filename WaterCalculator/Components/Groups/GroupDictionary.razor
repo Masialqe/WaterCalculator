@@ -1,0 +1,58 @@
+﻿@inject GetGroupDictionaryHandler GetGroupDictionaryHandler
+
+<div>
+    <label for="groupDictionary" class="block text-sm font-medium text-slate-300">
+        Grupa
+    </label>
+
+    <select class="@SelectClass"
+            id="groupDictionary"
+            @bind="SelectedValue"
+            disabled="@Disabled">
+        <option value="">@DefaultOptionText</option>
+
+        @foreach (var group in _groups)
+        {
+            <option value="@group.GroupId">@group.GroupName</option>
+        }
+    </select>
+</div>
+
+@code {
+    private List<GroupDictionaryOption> _groups = [];
+
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public Guid? Value { get; set; }
+    [Parameter] public EventCallback<Guid> ValueChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string DefaultOptionText { get; set; } = "-- przypisz do grupy --";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await GetGroupDictionaryHandler.HandleAsync(CancellationToken);
+
+        if (result.IsFailure)
+        {
+            return;
+        }
+
+        _groups = result.Value;
+    }
+
+    private string SelectedValue
+    {
+        get => Value is null || Value == Guid.Empty ? string.Empty : Value.Value.ToString();
+        set
+        {
+            var parsedValue = Guid.TryParse(value, out var guid)
+                ? guid
+                : Guid.Empty;
+
+            Value = parsedValue;
+            _ = ValueChanged.InvokeAsync(parsedValue);
+        }
+    }
+
+    private string SelectClass =>
+        "mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60";
+}

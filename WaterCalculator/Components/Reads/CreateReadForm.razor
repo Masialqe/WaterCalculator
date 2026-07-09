@@ -1,0 +1,59 @@
+﻿@inject CreateReadHandler CreateReadHandler
+<SpinnerFallback Message="Zapisywanie..." IsLoading="_state.IsLoading">
+    <EditForm Model="_readFormModel" FormName="CreateRead" OnValidSubmit="HandleValidSumbmit">
+        <DataAnnotationsValidator />
+        <div class="space-y-5">
+            <NumberInput Id="value"
+                         Label="Wartość"
+                         @bind-Value="_readFormModel.Value" />
+
+            <DateInput Id="readDate"
+                       Label="Data odczytu"
+                       @bind-Value="_readFormModel.ReadDate" />
+
+            @if (_state.IsError)
+            {
+                <ErrorMessage Message="@_state.ErrorMessage" />
+            }
+
+            <div class="flex justify-center pt-2">
+                <PrimaryButton Type="submit" IsLoading="_state.IsLoading">
+                    Dodaj odczyt
+                </PrimaryButton>
+            </div>
+        </div>
+    </EditForm>
+</SpinnerFallback>
+
+@code {
+    [Parameter] public required Guid ApartmentId { get; set; }
+    [Parameter] public Guid? PayoffId { get; set; }
+    [Parameter] public EventCallback OnReadCreated { get; set; }
+
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    private CreateReadFormModel _readFormModel = new();
+    private ComponentState _state = new();
+
+    private async Task HandleValidSumbmit()
+    {
+        _state.SetLoading();
+
+        var result = await CreateReadHandler.HandleAsync(
+            new CreateReadCommand(
+                _readFormModel.Value, 
+                _readFormModel.ReadDate, 
+                ApartmentId,
+                PayoffId), CancellationToken);
+
+        if(result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _state.SetSuccess();
+        _readFormModel = new();
+
+        await OnReadCreated.InvokeAsync();
+    }
+}

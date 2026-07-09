@@ -1,0 +1,27 @@
+﻿@if (CreateInvoiceItem is not null)
+{
+    <div class="border rounded p-3 mb-2">
+        <div class="d-flex justify-content-center gap-3">
+            <div>
+                <h6 class="mb-1">@CreateInvoiceItem.Name</h6>
+                <small>@CreateInvoiceItem.Amount × @CreateInvoiceItem.PricePerUnit</small>
+                <br />
+                <small>VAT @CreateInvoiceItem.Vat %</small>
+            </div>
+            <div>
+                @* <button class="btn btn-sm btn-outline-primary me-2"
+                        @onclick="() => Edit(CreateInvoiceItem)">
+                    Edytuj
+                </button>
+                <button class="btn btn-sm btn-outline-danger"
+                        @onclick="() => Delete(CreateInvoiceItem)">
+                    Usuń
+                </button> *@
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public CreateInvoiceItemFormModel? CreateInvoiceItem { get; set; }
+}

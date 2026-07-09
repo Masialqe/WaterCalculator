@@ -1,0 +1,224 @@
+﻿@inject SummarizePayoffHandler SummarizePayoffHandler
+@inject SettlePayoffHandler SettlePayoffHandler
+
+<div class="space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div class="space-y-2">
+            <h3 class="text-2xl font-semibold tracking-tight text-white">
+                Aktywne rozliczenie
+            </h3>
+
+            <p class="text-sm text-slate-400">
+                Okres:
+                <span class="font-medium text-slate-200">@FormatDate(Summary.Payoff.PeriodFrom)</span>
+                -
+                <span class="font-medium text-slate-200">@FormatDate(Summary.Payoff.PeriodTo)</span>
+            </p>
+
+            <p class="text-sm text-slate-400">
+                Status:
+                <span class="font-medium text-slate-200">@Summary.Payoff.Status.GetDisplayName()</span>
+            </p>
+
+            @if (Summary.Payoff.Status == PayoffStatus.Summarized)
+            {
+                <div class="flex flex-col gap-1 text-sm text-slate-400">
+                    <p>
+                        Stan licznika:
+                        <span class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-200">
+                            @Summary.Payoff.TotalMeterValue
+                        </span>
+                    </p>
+                    <p>
+                        Suma zużycia:
+                        <span class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200">
+                            @Summary.Payoff.TotalConsumptionValue
+                        </span>
+                    </p>
+                </div>
+            }
+        </div>
+
+        <div class="inline-flex w-fit rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-sm font-medium text-indigo-300">
+            @Summary.Payoff.Status.GetDisplayName()
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+            <p class="text-sm text-slate-400">Mieszkania</p>
+            <p class="mt-2 text-2xl font-semibold text-white">@TotalCount</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+            <p class="text-sm text-slate-400">Uzupełnione odczyty</p>
+            <p class="mt-2 text-2xl font-semibold text-white">@CompletedCount</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+            <p class="text-sm text-slate-400">Postęp</p>
+            <p class="mt-2 text-2xl font-semibold text-white">@ProgressPercent%</p>
+        </div>
+    </div>
+
+    <div class="space-y-3">
+        <div class="flex items-center justify-between gap-3">
+            <span class="text-sm font-medium text-slate-300">Stan rozliczenia</span>
+            <span class="text-sm text-slate-400">@CompletedCount / @TotalCount (@ProgressPercent%)</span>
+        </div>
+
+        <div class="h-4 w-full overflow-hidden rounded-full border border-slate-800 bg-slate-900/80">
+            <div class="h-full rounded-full bg-indigo-500/80 transition-all duration-300"
+                 style="width:@($"{ProgressPercent}%")">
+            </div>
+        </div> 
+    </div>
+
+    <Table>
+        <HeaderTemplate>
+            <tr>
+                <TableHeaderCell>Mieszkanie</TableHeaderCell>
+                <TableHeaderCell Align="center">Status odczytu</TableHeaderCell>
+            </tr>
+        </HeaderTemplate>
+
+        <BodyTemplate>
+            @foreach (var apartment in Summary.Apartments)
+            {
+                var hasRead = apartment.Read is not null;
+
+                <tr class="transition hover:bg-slate-900/60">
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        @apartment.ApartmentName
+                    </TableCell>
+
+                    <TableCell Align="center">
+                        @if (hasRead)
+                        {
+                            <span class="inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200">
+                                @apartment.Read!.Value
+                            </span>
+                        }
+                        else
+                        {
+                            <PrimaryButton OnClick="() => HandleReadCreationInvoke(apartment.ApartmentId)">
+                                Dodaj
+                            </PrimaryButton>
+                        }
+                    </TableCell>
+                </tr>
+            }
+        </BodyTemplate>
+    </Table>
+
+    @if (_state.IsError)
+    {
+        <ErrorMessage Message="@_state.ErrorMessage" />
+    }
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <PrimaryButton OnClick="HandleCalculatePayoff"
+                       Disabled="@(Summary.Payoff.Status != PayoffStatus.Open)"
+                       AdditionalClasses="sm:w-auto">
+            Podsumuj
+        </PrimaryButton>
+
+        <SecondaryButton OnClick="async () => await _createInvoiceModal.ShowModalAsync()"
+                         Disabled="@(Summary.Payoff.Status != PayoffStatus.Summarized)"
+                         AdditionalClasses="sm:w-auto">
+            Dodaj fakturę
+        </SecondaryButton>
+
+        <DangerButton OnClick="HandlePayoffSettleInvoke"
+                      Disabled="@(Summary.Payoff.Status != PayoffStatus.Unsettled)"
+                      AdditionalClasses="sm:w-auto">
+            Rozlicz
+        </DangerButton>
+    </div>
+</div>
+
+<Modal @ref="_createReadModal" Title="Dodaj stan licznika">
+    <CreateReadForm PayoffId="Summary.Payoff.Id"
+                    ApartmentId="_currentApartmentId"
+                    OnReadCreated="HandleReadCreated" />
+</Modal>
+
+<Modal @ref="_createInvoiceModal" Title="Dodaj fakturę" Size="lg">
+    <CreateInvoiceManager PayoffId="Summary.Payoff.Id"
+                          OnInvoiceCreated="HandleInvoiceCreated" />
+</Modal>
+
+@code {
+    [Parameter] public required PayoffDetails Summary { get; set; }
+    [Parameter] public EventCallback OnPayoffChanged { get; set; }
+    [Parameter] public EventCallback OnPayoffSettled { get; set; }
+
+    private ComponentState _state = new();
+    private Modal _createReadModal = null!;
+    private Modal _createInvoiceModal = null!;
+    private Guid _currentApartmentId = Guid.Empty;
+
+    private int TotalCount => Summary.Apartments.Count;
+
+    private int CompletedCount => Summary.Apartments.Count(x => x.Read is not null);
+
+    private int ProgressPercent =>
+        TotalCount == 0 ? 0 : (int)Math.Round((decimal)CompletedCount / TotalCount * 100);
+
+    private static string FormatDate(DateTime date)
+        => date.ToString("dd.MM.yyyy");
+
+    private async Task HandleCalculatePayoff()
+    {
+        _state.SetLoading();
+
+        var result = await SummarizePayoffHandler.HandleAsync(Summary.Payoff.Id);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _state.SetSuccess();
+        await OnPayoffChanged.InvokeAsync();
+    }
+
+    private async Task HandleReadCreationInvoke(Guid apartmentId)
+    {
+        _currentApartmentId = apartmentId;
+
+        if (_currentApartmentId != Guid.Empty)
+        {
+            await _createReadModal.ShowModalAsync();
+        }
+    }
+
+    private async Task HandleReadCreated()
+    {
+        await _createReadModal.HideModalAsync();
+        await OnPayoffChanged.InvokeAsync();
+    }
+
+    private async Task HandleInvoiceCreated()
+    {
+        await _createInvoiceModal.HideModalAsync();
+        await OnPayoffChanged.InvokeAsync();
+    }
+
+    private async Task HandlePayoffSettleInvoke()
+    {
+        _state.SetLoading();
+
+        var result = await SettlePayoffHandler.HandleAsync(Summary.Payoff.Id);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _state.SetSuccess();
+        await OnPayoffSettled.InvokeAsync();
+    }
+}

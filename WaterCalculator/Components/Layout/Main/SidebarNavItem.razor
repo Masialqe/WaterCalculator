@@ -1,0 +1,29 @@
+﻿<li>
+    <NavLink href="@Href"
+             Match="NavLinkMatch.Prefix"
+             class="@LinkClass"
+             ActiveClass="border-indigo-500/40 bg-indigo-500/10 text-indigo-300"
+             aria-label="@AriaLabel">
+        <span class="h-5 w-5 shrink-0" aria-hidden="true">
+            @((MarkupString)Icon)
+        </span>
+
+        @if (!IconOnly)
+        {
+            <span>@Label</span>
+        }
+    </NavLink>
+</li>
+
+@code {
+    [Parameter] public string Href { get; set; } = "/";
+    [Parameter] public string Label { get; set; } = string.Empty;
+    [Parameter] public string Icon { get; set; } = string.Empty;
+    [Parameter] public bool IconOnly { get; set; }
+    [Parameter] public string? AriaLabel { get; set; }
+
+    private string LinkClass =>
+        IconOnly
+            ? "flex h-11 w-11 items-center justify-center rounded-xl border border-transparent text-slate-300 transition hover:border-slate-700 hover:bg-slate-900 hover:text-white"
+            : "flex items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-sm font-medium text-slate-300 transition hover:border-indigo-400 hover:bg-slate-900 hover:text-white";
+}

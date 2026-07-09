@@ -1,0 +1,41 @@
+﻿@inject IJSRuntime JsRuntime
+
+<div class="modal fade" id="@_modalId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog @(GetDialogClasses())">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">@Title</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @ChildContent
+            </div>
+        </div>
+    </div>
+</div>
+
+@code
+{
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Size { get; set; } = string.Empty;
+    [Parameter] public bool Scrollable { get; set; } = false;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private Guid _modalId = Guid.CreateVersion7();
+
+    public async Task ShowModalAsync() =>
+            await JsRuntime.InvokeVoidAsync("showBootstrapModal", _modalId);
+
+    public async Task HideModalAsync() =>
+            await JsRuntime.InvokeVoidAsync("hideBootstrapModal", _modalId);
+
+    private string GetDialogClasses()
+    {
+        var classes = new List<string>();
+        if (Scrollable)
+            classes.Add("modal-dialog-scrollable");
+        if (!string.IsNullOrEmpty(Size))
+            classes.Add(Size);
+        return string.Join(" ", classes);
+    }
+}

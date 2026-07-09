@@ -1,0 +1,131 @@
+﻿@inject DeleteGroupHandler DeleteGroupHandler
+@inject ToastService ToastService
+
+<Table>
+    <HeaderTemplate>
+        <tr>
+            <TableHeaderCell>Lp.</TableHeaderCell>
+            <TableHeaderCell>Nazwa grupy</TableHeaderCell>
+            <TableHeaderCell>Opis grupy</TableHeaderCell>
+            <TableHeaderCell Align="right">Akcje</TableHeaderCell>
+        </tr>
+    </HeaderTemplate>
+
+    <BodyTemplate>
+        @if (Groups.Count == 0)
+        {
+            <tr>
+                <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-400">
+                    Brak danych do wyświetlenia.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @for (var i = 0; i < Groups.Count; i++)
+            {
+                var group = Groups[i];
+                var rowNumber = ((CurrentPage - 1) * PageSize) + i + 1;
+
+                <tr class="transition hover:bg-slate-900/60">
+                    <TableCell AdditionalClasses="whitespace-nowrap text-slate-300">
+                        @rowNumber
+                    </TableCell>
+
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        @group.Name
+                    </TableCell>
+
+                    <TableCell AdditionalClasses="max-w-xl leading-6 text-slate-300">
+                        <span class="break-words whitespace-normal sm:hidden" title="@group.Details">
+                            @group.Details.GetShortDescription(80)
+                        </span>
+
+                        <span class="hidden break-words whitespace-normal sm:inline">
+                            @group.Details
+                        </span>
+                    </TableCell>
+
+                    <TableCell Align="right">
+                        <div class="flex justify-end gap-2">
+                            <SecondaryButton OnClick="async () => await HandleEditButtonClicked(group.Id)">
+                                Edytuj
+                            </SecondaryButton>
+
+                            <DangerButton OnClick="async () => await HandleDeleteButtonClicked(group.Id)">
+                                Usuń
+                            </DangerButton>
+                        </div>
+                    </TableCell>
+                </tr>
+            }
+        }
+    </BodyTemplate>
+</Table>
+
+@if (TotalPages > 1)
+{
+    <div class="mt-6">
+        <Pagination CurrentPage="CurrentPage"
+                    TotalPages="TotalPages"
+                    OnPageChanged="OnGroupsChanged" />
+    </div>
+}
+
+<ConfirmationModal @ref="_deleteModal"
+                   Title="Usuń grupę"
+                   Message="Czy na pewno chcesz usunąć tę grupę? Tej operacji nie będzie można cofnąć."
+                   ConfirmText="Akceptuj"
+                   CancelText="Anuluj"
+                   OnConfirm="HandleDeleteAsync" />
+
+<Modal @ref="_editModal" Title="Edytuj grupe">
+    <GroupForm 
+        GroupId="_currentGroupId" 
+        OnGroupSaved="HandleGroupSaved" />
+</Modal>
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public IReadOnlyList<Group> Groups { get; set; } = [];
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int PageSize { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public EventCallback<int> OnGroupsChanged { get; set; }
+
+    private ConfirmationModal? _deleteModal;
+    private Modal? _editModal;
+    private Guid _currentGroupId = Guid.Empty;
+
+    private async Task HandleEditButtonClicked(Guid groupId)
+    {
+        _currentGroupId = groupId;
+        await _editModal!.ShowModalAsync();
+    }
+
+    private async Task HandleDeleteButtonClicked(Guid groupId)
+    {
+        _currentGroupId = groupId;
+        await _deleteModal!.ShowAsync();
+    }
+
+    private async Task HandleGroupSaved()
+    {
+        _currentGroupId = Guid.Empty;
+        await OnGroupsChanged.InvokeAsync(1);
+        await _editModal!.HideModalAsync();
+    }
+
+    private async Task HandleDeleteAsync()
+    {
+        var result = await DeleteGroupHandler.HandleAsync(_currentGroupId, CancellationToken);
+        if (result.IsFailure)
+        {
+            await ToastService.ShowFailureAsync(result.Error.ErrorDescription);
+            return;
+        }
+
+        await ToastService.ShowSuccessAsync("Pomyślnie usunięto pozycje.");
+        await OnGroupsChanged.InvokeAsync(1);
+    }
+}

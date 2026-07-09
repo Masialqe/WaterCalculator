@@ -1,0 +1,87 @@
+﻿@inject CreateInvoiceHandler Handler
+
+<SpinnerFallback IsLoading="_state.IsLoading" Message="Zapisywanie faktury...">
+    @if (_state.IsError)
+    {
+        <ErrorMessage Message="@_state.ErrorMessage" />
+    }
+
+    @if (_currentStep == Step.InvoiceDetails)
+    {
+        <InvoiceForm Model="_invoice"
+                     IsPreview="IsPreview"
+                     OnNext="GoToItemsStep" />
+    }
+    else
+    {
+        <CreateInvoiceItemManager Items="_invoiceItems"
+                                  IsPreview="IsPreview"
+                                  OnSave="SaveInvoice"
+                                  OnBack="GoBack" />
+    }
+</SpinnerFallback>
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+
+    [Parameter] public EventCallback OnInvoiceCreated { get; set; }
+    [Parameter] public Guid PayoffId { get; set; }
+    [Parameter] public Guid? InvoiceId { get; set; }
+
+    private InvoiceFormModel _invoice = new();
+    private List<CreateInvoiceItemFormModel> _invoiceItems = new();
+    private ComponentState _state = new();
+
+    private Step _currentStep = Step.InvoiceDetails;
+    private bool IsPreview => InvoiceId.HasValue && InvoiceId.Value != Guid.Empty;
+
+    private enum Step
+    {
+        InvoiceDetails,
+        InvoiceItems
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (IsPreview)
+        {
+            _currentStep = Step.InvoiceDetails;
+            // tutaj później podepniesz ładowanie danych po InvoiceId
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void GoToItemsStep()
+    {
+        _currentStep = Step.InvoiceItems;
+    }
+
+    private void GoBack()
+    {
+        _currentStep = Step.InvoiceDetails;
+    }
+
+    private async Task SaveInvoice()
+    {
+        if (IsPreview)
+            return;
+
+        _state.SetLoading();
+
+        var result = await Handler.HandleAsync(
+            new CreateInvoiceCommand(_invoice, _invoiceItems, PayoffId),
+            CancellationToken);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription!);
+            return;
+        }
+
+        _invoice = new();
+        _invoiceItems = new();
+        await OnInvoiceCreated.InvokeAsync();
+        _state.SetSuccess();
+    }
+}

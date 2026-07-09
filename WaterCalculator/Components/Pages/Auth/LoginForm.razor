@@ -1,0 +1,94 @@
+﻿@using Microsoft.AspNetCore.RateLimiting
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+@attribute [EnableRateLimiting("login")]
+
+<Box MaxWidth="lg">
+    <EditForm Model="Input" FormName="login" OnValidSubmit="LoginAsync" method="post">
+        <DataAnnotationsValidator />
+
+        <div class="space-y-5">
+            <div>
+                <label for="email" class="block text-sm font-medium text-slate-300">
+                    Email
+                </label>
+                <InputText id="email"
+                           class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+                           @bind-Value="Input.Email"
+                           autocomplete="username"
+                           placeholder="admin@example.com" />
+                <ValidationMessage For="() => Input.Email" class="mt-1 text-sm text-red-300" />
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-300">
+                    Hasło
+                </label>
+                <InputText id="password"
+                           type="password"
+                           class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+                           @bind-Value="Input.Password"
+                           autocomplete="current-password"
+                           placeholder="••••••••" />
+                <ValidationMessage For="() => Input.Password" class="mt-1 text-sm text-red-300" />
+            </div>
+
+            <div class="absolute -left-[9999px] top-auto h-px w-px overflow-hidden">
+                <InputText id="repeatPassword"
+                           @bind-Value="Input.RepeatPassword"
+                           autocomplete="off"
+                           tabindex="-1" />
+            </div>
+
+            <label class="flex items-center justify-center gap-3 text-sm text-slate-300">
+                <InputCheckbox class="h-4 w-4 rounded border-slate-700 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
+                               @bind-Value="Input.RememberMe" />
+                Zapamiętaj mnie
+            </label>
+
+            @if (_state.IsError)
+            {
+                <ErrorMessage Message="@_state.ErrorMessage" />
+            }
+
+            <PrimaryButton Type="submit" IsLoading="_state.IsLoading">
+                Zaloguj
+            </PrimaryButton>
+        </div>
+    </EditForm>
+</Box>
+
+@code {
+    [SupplyParameterFromForm] private LoginFormModel Input { get; set; } = new();
+
+    private ComponentState _state = new();
+
+    private async Task LoginAsync()
+    {
+        _state.SetLoading();
+
+        if (!string.IsNullOrEmpty(Input.RepeatPassword))
+        {
+            await Task.Delay(Random.Shared.Next(1000, 3000));
+            _state.SetError("Nieprawidłowy email lub hasło.");
+            return;
+        }
+
+        var result = await SignInManager.PasswordSignInAsync(
+            Input.Email,
+            Input.Password,
+            Input.RememberMe,
+            lockoutOnFailure: false);
+
+        if (!result.Succeeded)
+        {
+            _state.SetError("Nieprawidłowy email lub hasło.");
+            return;
+        }
+
+        _state.SetSuccess();
+        Navigation.NavigateTo("/admin", forceLoad: true);
+    }
+}

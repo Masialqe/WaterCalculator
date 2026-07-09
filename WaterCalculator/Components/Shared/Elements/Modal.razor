@@ -1,0 +1,77 @@
+﻿@if (_isOpen)
+{
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="@_titleId"
+         @onclick="HandleBackdropClick">
+
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
+
+        <div class="@ModalContainerClass"
+             @onclick:stopPropagation="true">
+            <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+                <h2 id="@_titleId" class="text-lg font-semibold text-white">
+                    @Title
+                </h2>
+
+                <button type="button"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        aria-label="Zamknij modal"
+                        @onclick="HideModalAsync">
+                    <span aria-hidden="true" class="text-xl leading-none">&times;</span>
+                </button>
+            </div>
+
+            <div class="@BodyClass">
+                @ChildContent
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Size { get; set; } = "md";
+    [Parameter] public bool Scrollable { get; set; }
+    [Parameter] public bool CloseOnBackdropClick { get; set; } = true;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private readonly string _titleId = $"modal-title-{Guid.NewGuid():N}";
+    private bool _isOpen;
+
+    public Task ShowModalAsync()
+    {
+        _isOpen = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public Task HideModalAsync()
+    {
+        _isOpen = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task HandleBackdropClick()
+        => CloseOnBackdropClick ? HideModalAsync() : Task.CompletedTask;
+
+    private string ModalContainerClass =>
+        $"relative z-10 w-full rounded-2xl border border-slate-800 bg-slate-900 text-slate-100 shadow-2xl shadow-black/50 {GetSizeClass()} max-h-[90vh]";
+
+    private string BodyClass =>
+        Scrollable
+            ? "overflow-y-auto px-5 py-4 max-h-[calc(90vh-80px)]"
+            : "px-5 py-4";
+
+    private string GetSizeClass() => Size switch
+    {
+        "sm" => "max-w-md",
+        "md" => "max-w-2xl",
+        "lg" => "max-w-4xl",
+        "xl" => "max-w-6xl",
+        "full" => "max-w-[95vw]",
+        _ => "max-w-2xl"
+    };
+}

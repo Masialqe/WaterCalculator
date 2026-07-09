@@ -1,0 +1,26 @@
+﻿@page "/payoffs"
+@rendermode InteractiveServer
+@using WaterCalculator.Components.Payoffs
+
+<div class="space-y-6 mb-5">
+    <SectionHeader SectionTitle="Rozliczenia"
+                   SectionDescription="Wybierz grupę, aby utworzyć nowe rozliczenie lub przejść do aktywnego." />
+</div>
+
+<Box MaxWidth="full" PaddingClass="p-6">
+    <div class="space-y-6">
+        <div class="space-y-5">
+            <GroupDictionary @bind-Value="_groupId" />
+
+            @if (_groupId != Guid.Empty)
+            {
+                <Separator />
+                <PayoffManager GroupId="_groupId" />
+            }
+        </div>
+    </div>
+</Box>
+
+@code {
+    private Guid _groupId = Guid.Empty;
+}

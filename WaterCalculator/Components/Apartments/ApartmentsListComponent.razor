@@ -1,0 +1,177 @@
+﻿@using WaterCalculator.Components.Apartments.Access
+@inject DeleteApartmentHandler DeleteApartmentHandler
+@inject ToastService ToastService
+@inject ApartmentUrlFactory ApartmentUrlFactory
+
+<Table>
+    <HeaderTemplate>
+        <tr>
+            <TableHeaderCell>Lp.</TableHeaderCell>
+            <TableHeaderCell>Nazwa mieszkania</TableHeaderCell>
+            <TableHeaderCell AdditionalClasses="hidden sm:table-cell">Szczegóły</TableHeaderCell>
+            <TableHeaderCell>Url</TableHeaderCell>
+            <TableHeaderCell Align="right">Akcje</TableHeaderCell>
+        </tr>
+    </HeaderTemplate>
+
+    <BodyTemplate>
+        @if (Apartments.Count == 0)
+        {
+            <tr>
+                <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-400">
+                    Brak danych do wyświetlenia.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @for (var i = 0; i < Apartments.Count; i++)
+            {
+                var apartment = Apartments[i];
+                var rowNumber = ((CurrentPage - 1) * PageSize) + i + 1;
+
+                <tr class="transition hover:bg-slate-900/60">
+                    <TableCell AdditionalClasses="whitespace-nowrap text-slate-300">
+                        @rowNumber
+                    </TableCell>
+
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        <div class="flex flex-col">
+                            <span>@apartment.Name</span>
+
+                            @if (!apartment.HasAnyRead)
+                            {
+                                <ApartmentFirstReadComponent 
+                                    ApartmentId="@apartment.Id"
+                                    OnFirstReadCreated="HandleApartmentChanged" />
+                            }
+                        </div>
+                    </TableCell>
+
+                    <TableCell AdditionalClasses="hidden max-w-xl leading-6 text-slate-300 sm:table-cell">
+                        <span class="break-words whitespace-normal sm:hidden" title="@apartment.Details">
+                            @apartment.Details.GetShortDescription(80)
+                        </span>
+
+                        <span class="hidden break-words whitespace-normal sm:inline">
+                            @apartment.Details
+                        </span>
+                    </TableCell>
+
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        @if (apartment.HasAccessConfigured)
+                        {
+                            <a href="@ApartmentUrlFactory.GetApartmentAccessUrl(apartment.PublicToken!)"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="inline-flex items-center gap-2 text-cyan-300 transition hover:text-cyan-200 hover:underline">
+                                <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07L10 5m4 6a5 5 0 0 0-7.07 0L5.5 12.41a5 5 0 1 0 7.07 7.07L14 18" />
+                                </svg>
+
+                                <span class="sm:hidden">/@apartment.Name</span>
+                                <span class="hidden sm:inline">@ApartmentUrlFactory.GetUrlTokenText(apartment)</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-slate-400">Brak url</span>
+                        }
+                    </TableCell>
+
+                    <TableCell Align="right">
+                        <div class="flex flex-col items-end gap-2 sm:flex-row sm:justify-end">
+                            <SecondaryButton OnClick="async () => await HandleEditButtonClicked(apartment.Id)">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </SecondaryButton>
+
+                            <DangerButton OnClick="async () => await HandleDeleteButtonClicked(apartment.Id)">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14" />
+                                </svg>
+                            </DangerButton>
+
+                            <ApartmentAccessComponent Apartment="apartment"
+                                                      OnAccessGenerated="HandleApartmentChanged" />
+                        </div>
+                    </TableCell>
+                </tr>
+            }
+        }
+    </BodyTemplate>
+</Table>
+
+@if (TotalPages > 1)
+{
+    <div class="mt-6">
+        <Pagination CurrentPage="CurrentPage"
+                    TotalPages="TotalPages"
+                    OnPageChanged="OnApartmentChanged" />
+    </div>
+}
+
+<ConfirmationModal @ref="_deleteModal"
+                   Title="Usuń grupę"
+                   Message="Czy na pewno chcesz usunąć tę grupę? Tej operacji nie będzie można cofnąć."
+                   ConfirmText="Akceptuj"
+                   CancelText="Anuluj"
+                   OnConfirm="HandleDeleteAsync" />
+
+<Modal @ref="_editModal" Title="Edytuj grupe">
+    <ApartmentForm ApartmentId="_currentApartmentId" OnApartmentSaved="HandleApartmentSaved"/>
+</Modal>
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public IReadOnlyList<ApartmentListItem> Apartments { get; set; } = [];
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int PageSize { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public EventCallback<int> OnApartmentChanged { get; set; }
+
+    private Modal _editModal = null!;
+    private ConfirmationModal _deleteModal = null!;
+    private Guid _currentApartmentId = Guid.Empty;
+
+    private async Task HandleEditButtonClicked(Guid apartmentId)
+    {
+        _currentApartmentId = apartmentId;
+        await _editModal!.ShowModalAsync();
+    }
+
+    private async Task HandleDeleteButtonClicked(Guid apartmentId)
+    {
+        _currentApartmentId = apartmentId;
+        await _deleteModal!.ShowAsync();
+    }
+
+    private async Task HandleDeleteAsync()
+    {
+        var result = await DeleteApartmentHandler.HandleAsync(
+            _currentApartmentId, CancellationToken);
+
+        _currentApartmentId = Guid.Empty;
+
+        if(result.IsFailure)
+        {
+            await ToastService.ShowFailureAsync(result.Error.ErrorDescription);
+            return;
+        }
+
+        await HandleApartmentChanged();
+        await ToastService.ShowSuccessAsync("Pomyslnie usunięto mieszkanie.");
+    }
+
+    private async Task HandleApartmentSaved()
+    {
+        _currentApartmentId = Guid.Empty;
+        await _editModal.HideModalAsync();
+        await HandleApartmentChanged();
+    }
+
+    private async Task HandleApartmentChanged()
+        => await OnApartmentChanged.InvokeAsync(1);
+ }

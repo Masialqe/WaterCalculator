@@ -1,0 +1,31 @@
+﻿<div class="@WrapperClass">
+    <div class="@BoxClass">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public string MaxWidth { get; set; } = "lg";
+    [Parameter] public string PaddingClass { get; set; } = "p-6";
+    [Parameter] public string AdditionalWrapperClass { get; set; } = string.Empty;
+    [Parameter] public string AdditionalBoxClass { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string WrapperClass =>
+        $"w-full {GetMaxWidthClass()} {AdditionalWrapperClass}".Trim();
+
+    private string BoxClass =>
+        $"rounded-2xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/40 {PaddingClass} {AdditionalBoxClass}".Trim();
+
+    private string GetMaxWidthClass() => MaxWidth switch
+    {
+        "sm" => "max-w-sm",
+        "md" => "max-w-md",
+        "lg" => "max-w-lg",
+        "xl" => "max-w-xl",
+        "2xl" => "max-w-2xl",
+        "4xl" => "max-w-4xl",
+        "full" => "max-w-full",
+        _ => "max-w-md"
+    };
+}

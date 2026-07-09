@@ -24,6 +24,7 @@ namespace WaterCalculator.Database.Configuration
             builder.HasIndex(s => s.ApartmentId);
             builder.HasIndex(s => s.InvoiceId);
             builder.HasIndex(s => s.CreatedAt);
+            builder.HasIndex(s => s.PayoffId);
         }
     }
 }

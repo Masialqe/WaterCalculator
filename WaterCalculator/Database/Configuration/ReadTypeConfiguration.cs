@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using WaterCalculator.Domain;
+using WaterCalculator.Domain.Reads;
 
 namespace WaterCalculator.Database.Configuration
 {
@@ -19,6 +19,7 @@ namespace WaterCalculator.Database.Configuration
 
             builder.HasIndex(r => r.ApartmentId);
             builder.HasIndex(r => r.CreatedAt);
+            //builder.HasIndex(r => r.PayoffId);
         }
     }
 }

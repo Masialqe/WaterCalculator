@@ -1,0 +1,73 @@
+﻿<EditForm Model="Model" FormName="CreateInvoice" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="space-y-5">
+        <div class="text-left">
+            <h3 class="text-xl font-semibold tracking-tight text-white">
+                @(IsPreview ? "Podgląd faktury" : "Dane faktury")
+            </h3>
+            <p class="mt-2 text-sm leading-6 text-slate-400">
+                @(IsPreview
+                    ? "Podgląd podstawowych danych faktury."
+                    : "Uzupełnij dane podstawowe, a następnie przejdź do pozycji faktury.")
+            </p>
+        </div>
+
+        <TextInput Id="name"
+                   Label="Nazwa faktury"
+                   @bind-Value="Model.Name"
+                   AdditionalClasses="@(IsPreview ? "opacity-70 pointer-events-none" : "")" />
+
+        <TextInput Id="number"
+                   Label="Numer faktury"
+                   @bind-Value="Model.Number"
+                   AdditionalClasses="@(IsPreview ? "opacity-70 pointer-events-none" : "")" />
+
+        <NumberInput Id="totalPrice"
+                     Label="Suma faktury"
+                     @bind-Value="Model.TotalPrice"
+                     AdditionalClasses="@(IsPreview ? "opacity-70 pointer-events-none" : "")" />
+
+        <NumberInput Id="totalConsumption"
+                     Label="Zużycie faktury"
+                     @bind-Value="Model.TotalConsumption"
+                     AdditionalClasses="@(IsPreview ? "opacity-70 pointer-events-none" : "")" />
+
+        <DateInput Id="invoiceDate"
+                   Label="Data z faktury"
+                   @bind-Value="Model.InvoiceDate"
+                   AdditionalClasses="@(IsPreview ? "opacity-70 pointer-events-none" : "")" />
+
+        @if (!IsPreview)
+        {
+            <div class="flex flex-col justify-center pt-2 gap-3">
+                <Separator />
+                <CreateInvoiceFromFile />
+                <Separator />
+                <PrimaryButton Type="submit" AdditionalClasses="pt-2">
+                    Dalej
+                </PrimaryButton>
+            </div>
+      
+        }
+        else
+        {
+            <div class="flex justify-center pt-2">
+                <SecondaryButton OnClick="OnNext">
+                    Pokaż pozycje
+                </SecondaryButton>
+            </div>
+        }
+    </div>
+</EditForm>
+
+@code {
+    [Parameter] public InvoiceFormModel Model { get; set; } = default!;
+    [Parameter] public bool IsPreview { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnNext.InvokeAsync();
+    }
+}

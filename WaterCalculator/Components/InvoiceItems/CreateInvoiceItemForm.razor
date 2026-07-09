@@ -1,0 +1,45 @@
+﻿@* <EditForm Model="_model" OnValidSubmit="HandleValidSubmit" FormName="CreateInvoiceItem">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+
+        <label class="form-label">Nazwa</label>
+        <InputText class="form-control" @bind-Value="_model.Name" />
+        <ValidationMessage For="@(() => _model.Name)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label"> Ilość </label>
+        <InputNumber class="form-control" @bind-Value="_model.Amount" />
+        <ValidationMessage For="@(() => _model.Amount)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Cena jednostkowa</label>
+        <InputNumber class="form-control" @bind-Value="_model.PricePerUnit" />
+        <ValidationMessage For="@(() => _model.PricePerUnit)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label"> VAT </label>
+        <InputNumber class="form-control" @bind-Value="_model.Vat" />
+        <ValidationMessage For="@(() => _model.Vat)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Typ rozliczenia</label>
+        <InputSelect class="form-select" @bind-Value="_model.CalculationType">
+            @foreach (var type in Enum.GetValues<CalculationType>())
+            {
+                <option value="@type">
+                    @type
+                </option>
+            }
+        </InputSelect>
+    </div>
+    <div class="d-grid">
+        <button class="btn btn-primary"
+                type="submit">
+            @(_isEditing ? "Zapisz zmiany" : "Dodaj pozycję")
+        </button>
+    </div>
+</EditForm>
+
+@code {
+
+} *@

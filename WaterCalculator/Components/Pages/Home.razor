@@ -1,7 +1,60 @@
 ﻿@page "/"
+@using WaterCalculator.Components.Apartments
+@using WaterCalculator.Components.Groups
+@using WaterCalculator.Components.Pages.Apartments
+@using WaterCalculator.Components.Payoffs
+@using WaterCalculator.Features.Settlements
 
-<PageTitle>Home</PageTitle>
+@inject GenerateSettlementForGroupHandler GenerateSettlementForGroupHandler
+@* @attribute [Microsoft.AspNetCore.Authorization.Authorize] *@
+@rendermode InteractiveServer
 
-<h1>Hello, world!</h1>
+@* <ApartmentManager/>
 
-Welcome to your new app.
+<GroupForm/>
+
+<PayoffSection/> *@
+
+<Modal @ref="_modal" Title="Testowe okno" Size="md" Scrollable="false">
+    <SpinnerFallback Message="Ładowanie testowe..." IsLoading="true">
+        <ApartmentAccessCodeForm/>
+    </SpinnerFallback>
+</Modal>
+<PrimaryButton OnClick="OpenModal">
+    Open
+</PrimaryButton>
+
+
+@code {
+    private ModalWindow? _invoiceModal;
+    private Guid _groupId = Guid.Empty;
+    private string _settlementError = string.Empty;
+
+    private Modal? _modal;
+
+    private async Task OpenModal()
+    {
+        if (_modal is not null)
+            await _modal.ShowModalAsync();
+    }
+
+    private async Task OpenInvoiceModalAsync()
+    {
+        if (_invoiceModal is not null)
+        {
+            await _invoiceModal.ShowModalAsync();
+        }
+    }
+
+    private async Task GenerateSettlement()
+    {
+        var result = await GenerateSettlementForGroupHandler.HandleAsync(
+            new GenerateSettlementForGroupCommand(_groupId));
+
+        if(result.IsFailure)
+        {
+            _settlementError = result.Error.ErrorDescription;
+        }
+
+    }
+}
