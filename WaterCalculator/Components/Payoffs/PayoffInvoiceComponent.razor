@@ -1,0 +1,29 @@
+
+@using WaterCalculator.Features.Views
+
+<div class="space-y-2">
+   <h3 class="text-2xl font-semibold tracking-tight text-white">
+      Dane faktury
+   </h3>
+   <p class="text-sm">
+      Numer: @Invoice.InvoiceNumber
+   </p>
+   <div class="flex flex-col gap-1 text-sm text-slate-400">
+      <p>
+         Zuzycie faktury:
+         <span class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-200">
+            @Invoice.MeterValue
+         </span>
+      </p>
+      <p>
+         Suma faktury:
+         <span class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200">
+            @Invoice.TotalAmount
+         </span>
+      </p>
+   </div>
+</div>
+
+@code {
+   [Parameter] public required InvoiceView Invoice { get; set; }
+}

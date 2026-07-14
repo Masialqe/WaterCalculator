@@ -7,7 +7,7 @@ using WaterCalculator.Domain.Abstractions;
 
 namespace WaterCalculator.Features.Apartments.GetAsList;
 
-public sealed partial class GetApartmentsHandler(IDbContextFactory<DatabaseContext> dbContextFactory, 
+public sealed class GetApartmentsHandler(IDbContextFactory<DatabaseContext> dbContextFactory, 
     IAppCache cache,
     ILogger<GetApartmentsHandler>  logger)
 {
@@ -34,6 +34,7 @@ public sealed partial class GetApartmentsHandler(IDbContextFactory<DatabaseConte
                                 a.Name,
                                 a.Details,
                                 a.GroupId,
+                                a.Group!.Name,
                                 a.PublicToken,
                                 !string.IsNullOrWhiteSpace(a.PublicToken),
                                 a.Reads.Any()))

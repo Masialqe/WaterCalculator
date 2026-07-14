@@ -4,7 +4,8 @@ using WaterCalculator.Features.Apartments.GetAsList;
 
 namespace WaterCalculator.Components.Apartments.Access
 {
-    public class ApartmentUrlFactory(NavigationManager navigation)
+    public class ApartmentUrlFactory(
+        NavigationManager navigation)
 
     {
         public string GetApartmentAccessUrl(string publicToken)
@@ -12,14 +13,18 @@ namespace WaterCalculator.Components.Apartments.Access
                 ? string.Empty
                 : $"{navigation.BaseUri.TrimEnd('/')}/apartments/{publicToken}/access";
 
-        public string GetUrlTokenText(Apartment apartment)
+        public string GetUrlTokenText(
+            Apartment apartment,
+            int maxLength = 20)
             => apartment.HasAccessConfigured
-                ? $"/{apartment.PublicToken}"
+                ? $"/{apartment.PublicToken}".Substring(0, maxLength)
                 : "Brak url";
 
-        public string GetUrlTokenText(ApartmentListItem apartment)
+        public string GetUrlTokenText(
+            ApartmentListItem apartment,
+            int maxLength = 20)
             => apartment.HasAccessConfigured
-                ? $"/{apartment.PublicToken}"
+                ? $"/{apartment.PublicToken}".Substring(0, maxLength)
                 : "Brak url";
 
 

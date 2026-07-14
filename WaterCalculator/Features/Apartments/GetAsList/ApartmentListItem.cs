@@ -5,6 +5,7 @@
         string Name,
         string Details,
         Guid? GroupId,
+        string GroupName,
         string? PublicToken,
         bool HasAccessConfigured,
         bool HasAnyRead);

@@ -38,7 +38,7 @@ public sealed class CreateReadHandler(IDbContextFactory<DatabaseContext> dbConte
                .Where(r => r.ApartmentId == command.ApartmentId)
                .OrderByDescending(x => x.ReadDate)
                .Select(r => r.Value)
-               .FirstOrDefaultAsync();
+               .FirstOrDefaultAsync(cancellationToken);
 
                 if (command.Value < lastReadForApartment)
                     return Errors.InvalidOperationError("Wartość odczytu nie może być mniejsza od poprzedniego.");

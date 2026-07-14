@@ -1,5 +1,80 @@
-﻿<h3>PayoffSettlementSummaryComponent</h3>
+﻿@using WaterCalculator.Features.Payoffs.GetSummary
+@inject GetPayoffSummaryHandler GetPayoffSummaryHandler
 
+
+<SpinnerFallback Message="Ladowanie podsumowania..." IsLoading="_state.IsLoading">
+    
+    @if (_summary is not null)
+    {
+        <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <PayoffSummaryComponent Payoff="_summary.Payoff"/>
+            <PayoffInvoiceComponent Invoice="_summary.Payoff.Invoice!"/>
+        </div>
+        
+        <Table>
+            <HeaderTemplate>
+                <tr>
+                    <TableHeaderCell>Mieszkanie</TableHeaderCell>
+                    <TableHeaderCell Align="center">Zuzycie</TableHeaderCell>
+                    <TableHeaderCell Align="center">Do zaplaty</TableHeaderCell>
+                    <TableHeaderCell Align="center">Status</TableHeaderCell>
+                </tr>
+            </HeaderTemplate>
+
+            <BodyTemplate>
+                @foreach (var summary in _summary.SummaryItems)
+                {
+                    <TableCell>
+                        @summary.ApartmentName
+                    </TableCell>
+                    <TableCell>
+                        @summary.Consumption
+                    </TableCell>
+                    <TableCell>
+                        @summary.AmountToPay
+                    </TableCell>
+                    <TableCell>
+                        @summary.Status
+                    </TableCell>
+                }
+            </BodyTemplate>
+        </Table>
+    }
+
+    @if (_state.IsError)
+    {
+        <ErrorMessage Message="@_state.ErrorMessage"></ErrorMessage>
+    }
+</SpinnerFallback>
 @code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public Guid PayoffId { get; set; } = Guid.Empty;
+    
+    private PayoffSummary? _summary = null;
+    private ComponentState _state = new();
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (PayoffId != Guid.Empty)
+        {
+            await LoadSummaryAsync();
+        }
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        _state.SetLoading();
+        var result = await GetPayoffSummaryHandler.HandleAsync(
+            PayoffId,
+            CancellationToken);
+
+        if (result.IsFailure)
+        {
+            _state.SetError(result.Error.ErrorDescription);
+            return;
+        }
+
+        _summary = result.Value;
+        _state.SetSuccess();
+    }
 }

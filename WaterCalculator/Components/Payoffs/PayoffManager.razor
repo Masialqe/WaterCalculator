@@ -29,8 +29,8 @@
     }
 </SpinnerFallback>
 
-<Modal Title="Podsumowanie rozliczenia">
-    <PayoffSettlementSummaryComponent/>
+<Modal @ref="_payoffSettlementSummaryModal" Title="Podsumowanie rozliczenia">
+    <PayoffSettlementSummaryComponent />
 </Modal>
 
     @code {
@@ -39,6 +39,8 @@
 
     private ComponentState _state = new();
     private PayoffDetails? _payoffSummary;
+
+    private Modal _payoffSettlementSummaryModal = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -76,6 +78,7 @@
 
     private async Task HandlePayoffSettled()
     {
+        await _payoffSettlementSummaryModal.ShowModalAsync();
         await LoadPayoffAsync();
     }
 }

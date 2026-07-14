@@ -1,0 +1,101 @@
+@using WaterCalculator.Features.Payoffs.GetList
+
+<Table>
+    <HeaderTemplate>
+        <tr>
+            <TableHeaderCell>Lp.</TableHeaderCell>
+            <TableHeaderCell>Okres od</TableHeaderCell>
+            <TableHeaderCell>Okres do</TableHeaderCell>
+            <TableHeaderCell>Stan licznika</TableHeaderCell>
+            <TableHeaderCell>Zuzycie</TableHeaderCell>
+            <TableHeaderCell>Grupa</TableHeaderCell>
+            <TableHeaderCell Align="right">Akcje</TableHeaderCell>
+        </tr>
+    </HeaderTemplate>
+
+    <BodyTemplate>
+        @if (Payoffs.Count == 0)
+        {
+            <tr>
+                <td colspan="4" class="px-4 py-8 text-center text-sm text-slate-400">
+                    Brak danych do wyświetlenia.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @for (var i = 0; i < Payoffs.Count; i++)
+            {
+                var payoff = Payoffs[i];
+                var rowNumber = ((CurrentPage - 1) * PageSize) + i + 1;
+
+                <tr class="transition hover:bg-slate-900/60">
+                    <TableCell AdditionalClasses="whitespace-nowrap text-slate-300">
+                        @rowNumber
+                    </TableCell>
+
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        @payoff.PeriodFrom
+                    </TableCell>
+                    
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        @payoff.PeriodTo
+                    </TableCell>
+                    
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        @payoff.TotalMeterValue
+                    </TableCell>
+                    
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        @payoff.TotaConsumption
+                    </TableCell>
+                    
+                    <TableCell AdditionalClasses="font-medium text-white">
+                        <Pill>
+                            @payoff.GroupName
+                        </Pill>
+                    </TableCell>
+
+                    
+
+                    <TableCell Align="right">
+                        <div class="flex justify-end gap-2">
+                            <SecondaryButton>
+                                Podsumowanie
+                            </SecondaryButton>
+                        </div>
+                    </TableCell>
+                </tr>
+            }
+        }
+    </BodyTemplate>
+</Table>
+
+@if (TotalPages > 1)
+{
+    <div class="mt-6">
+        <Pagination CurrentPage="CurrentPage"
+                    TotalPages="TotalPages"
+                    OnPageChanged="OnPayoffChanged" />
+    </div>
+}
+
+
+
+@* <Modal @ref="_editModal" Title="Podsumowanie rozliczenia"> *@
+@*    *@
+@* </Modal> *@
+
+@code {
+    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
+    [Parameter] public IReadOnlyList<PayoffListItem> Payoffs { get; set; } = [];
+    [Parameter] public int CurrentPage { get; set; }
+    [Parameter] public int PageSize { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public EventCallback<int> OnPayoffChanged { get; set; }
+
+    private ConfirmationModal? _deleteModal;
+    private Modal? _editModal;
+    private Guid _currentGroupId = Guid.Empty;
+    
+}

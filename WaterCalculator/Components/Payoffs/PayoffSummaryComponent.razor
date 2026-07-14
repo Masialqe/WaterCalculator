@@ -1,0 +1,39 @@
+<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div class="space-y-2">
+        <h3 class="text-2xl font-semibold tracking-tight text-white">
+            Aktywne rozliczenie
+        </h3>
+
+        <p class="text-sm text-slate-400">
+            Okres:
+            <span class="font-medium text-slate-200">@FormatDate(Payoff.PeriodFrom)</span>
+            -
+            <span class="font-medium text-slate-200">@FormatDate(Payoff.PeriodTo)</span>
+        </p>
+
+        @if (Payoff.Status != PayoffStatus.Open)
+        {
+            <div class="flex flex-col gap-1 text-sm text-slate-400">
+                <p>
+                    Stan licznika:
+                    <span class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-200">
+                        @Payoff.TotalMeterValue
+                    </span>
+                </p>
+                <p>
+                    Suma zużycia:
+                    <span class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200">
+                        @Payoff.TotalConsumptionValue
+                    </span>
+                </p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public required Features.Views.PayoffView Payoff { get; set; }
+    
+    private static string FormatDate(DateTime date)
+        => date.ToString("dd.MM.yyyy");
+}

@@ -2,48 +2,66 @@
 @inject SettlePayoffHandler SettlePayoffHandler
 
 <div class="space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div class="space-y-2">
-            <h3 class="text-2xl font-semibold tracking-tight text-white">
-                Aktywne rozliczenie
-            </h3>
-
-            <p class="text-sm text-slate-400">
-                Okres:
-                <span class="font-medium text-slate-200">@FormatDate(Summary.Payoff.PeriodFrom)</span>
-                -
-                <span class="font-medium text-slate-200">@FormatDate(Summary.Payoff.PeriodTo)</span>
-            </p>
-
-            <p class="text-sm text-slate-400">
-                Status:
-                <span class="font-medium text-slate-200">@Summary.Payoff.Status.GetDisplayName()</span>
-            </p>
-
-            @if (Summary.Payoff.Status == PayoffStatus.Summarized)
-            {
-                <div class="flex flex-col gap-1 text-sm text-slate-400">
-                    <p>
-                        Stan licznika:
-                        <span class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-200">
-                            @Summary.Payoff.TotalMeterValue
-                        </span>
-                    </p>
-                    <p>
-                        Suma zużycia:
-                        <span class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200">
-                            @Summary.Payoff.TotalConsumptionValue
-                        </span>
-                    </p>
-                </div>
-            }
-        </div>
-
-        <div class="inline-flex w-fit rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-sm font-medium text-indigo-300">
+    @* <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"> *@
+    @*     <div class="space-y-2"> *@
+    @*         <h3 class="text-2xl font-semibold tracking-tight text-white"> *@
+    @*             Aktywne rozliczenie *@
+    @*         </h3> *@
+    @* *@
+    @*         <p class="text-sm text-slate-400"> *@
+    @*             Okres: *@
+    @*             <span class="font-medium text-slate-200">@FormatDate(Summary.Payoff.PeriodFrom)</span> *@
+    @*             - *@
+    @*             <span class="font-medium text-slate-200">@FormatDate(Summary.Payoff.PeriodTo)</span> *@
+    @*         </p> *@
+    @* *@
+    @*         @if (Summary.Payoff.Status != PayoffStatus.Open) *@
+    @*         { *@
+    @*             <div class="flex flex-col gap-1 text-sm text-slate-400"> *@
+    @*                 <p> *@
+    @*                     Stan licznika: *@
+    @*                     <span class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-200"> *@
+    @*                         @Summary.Payoff.TotalMeterValue *@
+    @*                     </span> *@
+    @*                 </p> *@
+    @*                 <p> *@
+    @*                     Suma zużycia: *@
+    @*                     <span class="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200"> *@
+    @*                         @Summary.Payoff.TotalConsumptionValue *@
+    @*                     </span> *@
+    @*                 </p> *@
+    @*             </div> *@
+    @*         } *@
+    @*     </div> *@
+    @* *@
+    @*     <div class="inline-flex w-fit rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-300"> *@
+    @*         @Summary.Payoff.Status.GetDisplayName() *@
+    @*     </div> *@
+    @* </div> *@
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        
+        <Box>
+            <PayoffSummaryComponent Payoff="Summary.Payoff"/>
+        </Box>
+        
+        @if (Summary.Payoff.Status == PayoffStatus.Unsettled &&
+             Summary.Payoff.Invoice is not null)
+        {
+            <Box>
+                <PayoffInvoiceComponent 
+                    Invoice="Summary.Payoff.Invoice"/>
+            </Box>
+            @* <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"> *@
+            @*     <PayoffInvoiceComponent  *@
+            @*         Invoice="Summary.Payoff.Invoice"/> *@
+            @* </div> *@
+        }
+        
+        <div class="inline-flex w-fit rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-300">
             @Summary.Payoff.Status.GetDisplayName()
         </div>
     </div>
-
+    
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
             <p class="text-sm text-slate-400">Mieszkania</p>
@@ -96,7 +114,7 @@
                         @if (hasRead)
                         {
                             <span class="inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-sm font-medium text-emerald-200">
-                                @apartment.Read!.Value
+                                @apartment.Read!.ConsumptionFromLastRead
                             </span>
                         }
                         else
@@ -143,7 +161,7 @@
                     OnReadCreated="HandleReadCreated" />
 </Modal>
 
-<Modal @ref="_createInvoiceModal" Title="Dodaj fakturę" Size="lg">
+<Modal @ref="_createInvoiceModal" Title="Dodaj fakturę" Size="lg" Scrollable="true">
     <CreateInvoiceManager PayoffId="Summary.Payoff.Id"
                           OnInvoiceCreated="HandleInvoiceCreated" />
 </Modal>
@@ -151,7 +169,7 @@
 @code {
     [Parameter] public required PayoffDetails Summary { get; set; }
     [Parameter] public EventCallback OnPayoffChanged { get; set; }
-    [Parameter] public EventCallback OnPayoffSettled { get; set; }
+    [Parameter] public EventCallback<Guid> OnPayoffSettled { get; set; }
 
     private ComponentState _state = new();
     private Modal _createReadModal = null!;

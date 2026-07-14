@@ -3,10 +3,10 @@ using WaterCalculator.Database;
 using WaterCalculator.Domain;
 using WaterCalculator.Domain.Abstractions;
 using WaterCalculator.Domain.Reads;
+using WaterCalculator.Features.Views;
 
 namespace WaterCalculator.Features.Payoffs.Get
 {
-    public sealed record PayoffDetails(Payoff Payoff, List<PayoffApartmentItem> Apartments);
     public sealed class GetPayoffDetailsHandler(IDbContextFactory<DatabaseContext> dbContextFactory,
         ILogger<GetPayoffDetailsHandler> logger)
     {
@@ -19,8 +19,9 @@ namespace WaterCalculator.Features.Payoffs.Get
                 var payoff = await context.Payoffs
                     .AsNoTracking()
                     .Include(p => p.Reads)
+                    .Include(p => p.Invoice)
                     .FirstOrDefaultAsync(
-                        p => p.GroupId == groupId && p.Status != PayoffStatus.Settled);
+                        p => p.GroupId == groupId && p.Status != PayoffStatus.Settled, cancellationToken);
 
                 if (payoff is null)
                     return Errors.NotFoundError;
@@ -42,7 +43,9 @@ namespace WaterCalculator.Features.Payoffs.Get
                         readsByApartmentId.TryGetValue(apartment.Id, out var read) ? read : null))
                     .ToList();
 
-                return new PayoffDetails(payoff, apartments);
+                return new PayoffDetails(
+                    payoff,
+                    apartments);
             }
             catch (Exception ex)
             {

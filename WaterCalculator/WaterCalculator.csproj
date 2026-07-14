@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <Folder Include="Components\Identity\" />
+    <Folder Include="Components\Shared\Icons\" />
   </ItemGroup>
 
 </Project>

@@ -1,31 +1,115 @@
-﻿@inject GetGroupDictionaryHandler GetGroupDictionaryHandler
+﻿@* @inject GetGroupDictionaryHandler GetGroupDictionaryHandler *@
+@* *@
+@* <div> *@
+@*     <label for="groupDictionary" class="block text-sm font-medium text-slate-300"> *@
+@*         Grupa *@
+@*     </label> *@
+@* *@
+@*     <select class="@SelectClass" *@
+@*             id="groupDictionary" *@
+@*             @bind="SelectedValue" *@
+@*             disabled="@Disabled"> *@
+@*         <option value="">@DefaultOptionText</option> *@
+@* *@
+@*         @foreach (var group in _groups) *@
+@*         { *@
+@*             <option value="@group.GroupId">@group.GroupName</option> *@
+@*         } *@
+@*     </select> *@
+@* </div> *@
+@* *@
+@* @code { *@
+@*     private List<GroupDictionaryOption> _groups = []; *@
+@* *@
+@*     [CascadingParameter] private CancellationToken CancellationToken { get; set; } *@
+@*     [Parameter] public Guid? Value { get; set; } *@
+@*     [Parameter] public EventCallback<Guid> ValueChanged { get; set; } *@
+@*     [Parameter] public bool Disabled { get; set; } *@
+@*     [Parameter] public string DefaultOptionText { get; set; } = "-- przypisz do grupy --"; *@
+@* *@
+@*     protected override async Task OnInitializedAsync() *@
+@*     { *@
+@*         var result = await GetGroupDictionaryHandler.HandleAsync(CancellationToken); *@
+@* *@
+@*         if (result.IsFailure) *@
+@*         { *@
+@*             return; *@
+@*         } *@
+@* *@
+@*         _groups = result.Value; *@
+@*     } *@
+@* *@
+@*     private string SelectedValue *@
+@*     { *@
+@*         get => Value is null || Value == Guid.Empty ? string.Empty : Value.Value.ToString(); *@
+@*         set *@
+@*         { *@
+@*             var parsedValue = Guid.TryParse(value, out var guid) *@
+@*                 ? guid *@
+@*                 : Guid.Empty; *@
+@* *@
+@*             Value = parsedValue; *@
+@*             _ = ValueChanged.InvokeAsync(parsedValue); *@
+@*         } *@
+@*     } *@
+@* *@
+@*     private string SelectClass => *@
+@*         "mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60"; *@
+@* } *@
+
+@inject GetGroupDictionaryHandler GetGroupDictionaryHandler
 
 <div>
-    <label for="groupDictionary" class="block text-sm font-medium text-slate-300">
+    <span class="block text-sm font-medium text-slate-300">
         Grupa
-    </label>
+    </span>
 
-    <select class="@SelectClass"
-            id="groupDictionary"
-            @bind="SelectedValue"
-            disabled="@Disabled">
-        <option value="">@DefaultOptionText</option>
+    <div class="mt-2 flex flex-wrap gap-2"
+         role="group"
+         aria-label="Wybór grupy">
 
-        @foreach (var group in _groups)
+        @foreach (var (group, index) in _groups.Select((group, index) => (group, index)))
         {
-            <option value="@group.GroupId">@group.GroupName</option>
+            <button type="button"
+                    class="@GetGroupClass(group.GroupId, index)"
+                    disabled="@Disabled"
+                    aria-pressed="@IsSelected(group.GroupId)"
+                    @onclick="() => SelectGroupAsync(group.GroupId)">
+                @group.GroupName
+
+                @if (IsSelected(group.GroupId))
+                {
+                    <svg class="size-4 shrink-0"
+                         viewBox="0 0 20 20"
+                         fill="currentColor"
+                         aria-hidden="true">
+                        <path fill-rule="evenodd"
+                              d="M16.704 5.292a1 1 0 0 1 .004 1.414l-7.25 7.292a1 1 0 0 1-1.42.004l-3.75-3.708a1 1 0 0 1 1.404-1.424l3.04 3.005 6.548-6.579a1 1 0 0 1 1.424-.004Z"
+                              clip-rule="evenodd"/>
+                    </svg>
+                }
+            </button>
         }
-    </select>
+    </div>
 </div>
 
 @code {
     private List<GroupDictionaryOption> _groups = [];
 
-    [CascadingParameter] private CancellationToken CancellationToken { get; set; }
-    [Parameter] public Guid? Value { get; set; }
-    [Parameter] public EventCallback<Guid> ValueChanged { get; set; }
-    [Parameter] public bool Disabled { get; set; }
-    [Parameter] public string DefaultOptionText { get; set; } = "-- przypisz do grupy --";
+    [CascadingParameter]
+    private CancellationToken CancellationToken { get; set; }
+
+    [Parameter]
+    public Guid? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> ValueChanged { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public string DefaultOptionText { get; set; } = "-- przypisz do grupy --";
 
     protected override async Task OnInitializedAsync()
     {
@@ -39,20 +123,73 @@
         _groups = result.Value;
     }
 
-    private string SelectedValue
+    private async Task SelectGroupAsync(Guid groupId)
     {
-        get => Value is null || Value == Guid.Empty ? string.Empty : Value.Value.ToString();
-        set
+        if (Disabled)
         {
-            var parsedValue = Guid.TryParse(value, out var guid)
-                ? guid
-                : Guid.Empty;
-
-            Value = parsedValue;
-            _ = ValueChanged.InvokeAsync(parsedValue);
+            return;
         }
+
+        Value = groupId;
+        await ValueChanged.InvokeAsync(groupId);
     }
 
-    private string SelectClass =>
-        "mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60";
+    private bool IsSelected(Guid groupId)
+    {
+        var selectedValue = Value ?? Guid.Empty;
+
+        return selectedValue == groupId;
+    }
+
+    private string GetDefaultOptionClass()
+    {
+        const string baseClass =
+            "inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 " +
+            "text-sm font-medium outline-none transition " +
+            "focus-visible:ring-2 focus-visible:ring-indigo-500/40 " +
+            "disabled:cursor-not-allowed disabled:opacity-60";
+
+        return IsSelected(Guid.Empty)
+            ? $"{baseClass} border-slate-400 bg-slate-700 text-white ring-2 ring-slate-400/30"
+            : $"{baseClass} border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-500 hover:bg-slate-900";
+    }
+
+    private string GetGroupClass(Guid groupId, int index)
+    {
+        const string baseClass =
+            "inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 " +
+            "text-sm font-medium outline-none transition " +
+            "focus-visible:ring-2 focus-visible:ring-indigo-500/40 " +
+            "disabled:cursor-not-allowed disabled:opacity-60";
+
+        var selected = IsSelected(groupId);
+
+        var color = index % 6;
+        return color switch
+        {
+            0 => selected
+                ? $"{baseClass} border-indigo-400 bg-indigo-500/25 text-indigo-200 ring-2 ring-indigo-500/30"
+                : $"{baseClass} border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:border-indigo-400/60 hover:bg-indigo-500/20",
+
+            1 => selected
+                ? $"{baseClass} border-emerald-400 bg-emerald-500/25 text-emerald-200 ring-2 ring-emerald-500/30"
+                : $"{baseClass} border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:border-emerald-400/60 hover:bg-emerald-500/20",
+
+            2 => selected
+                ? $"{baseClass} border-amber-400 bg-amber-500/25 text-amber-200 ring-2 ring-amber-500/30"
+                : $"{baseClass} border-amber-500/30 bg-amber-500/10 text-amber-300 hover:border-amber-400/60 hover:bg-amber-500/20",
+
+            3 => selected
+                ? $"{baseClass} border-sky-400 bg-sky-500/25 text-sky-200 ring-2 ring-sky-500/30"
+                : $"{baseClass} border-sky-500/30 bg-sky-500/10 text-sky-300 hover:border-sky-400/60 hover:bg-sky-500/20",
+
+            4 => selected
+                ? $"{baseClass} border-rose-400 bg-rose-500/25 text-rose-200 ring-2 ring-rose-500/30"
+                : $"{baseClass} border-rose-500/30 bg-rose-500/10 text-rose-300 hover:border-rose-400/60 hover:bg-rose-500/20",
+
+            _ => selected
+                ? $"{baseClass} border-violet-400 bg-violet-500/25 text-violet-200 ring-2 ring-violet-500/30"
+                : $"{baseClass} border-violet-500/30 bg-violet-500/10 text-violet-300 hover:border-violet-400/60 hover:bg-violet-500/20"
+        };
+    }
 }

@@ -1,0 +1,7 @@
+<span class="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm font-medium text-cyan-200">
+   @ChildContent
+</span>
+
+@code {
+   [Parameter] public RenderFragment? ChildContent { get; set; } 
+}

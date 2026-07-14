@@ -39,7 +39,7 @@
     private bool IsDisabled => Disabled || IsLoading;
 
     private string CssClass =>
-        $$"""
+        $"""
         rounded-xl
         border
         border-indigo-500/40
@@ -56,6 +56,6 @@
         items-center
         justify-center
         gap-2
-        {{AdditionalClasses}}
+        {AdditionalClasses}
         """.Trim();
 }

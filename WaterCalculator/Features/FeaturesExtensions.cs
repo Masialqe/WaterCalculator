@@ -10,6 +10,8 @@ using WaterCalculator.Features.Groups.GetList;
 using WaterCalculator.Features.Invoices.Create;
 using WaterCalculator.Features.Payoffs.Create;
 using WaterCalculator.Features.Payoffs.Get;
+using WaterCalculator.Features.Payoffs.GetList;
+using WaterCalculator.Features.Payoffs.GetSummary;
 using WaterCalculator.Features.Payoffs.Settle;
 using WaterCalculator.Features.Payoffs.Summarize;
 using WaterCalculator.Features.Reads.Create;
@@ -57,6 +59,8 @@ namespace WaterCalculator.Features
                 services.AddScoped<SettlePayoffHandler>();
                 services.AddSingleton<PayoffSettlementCalculator>();
                 services.AddSingleton<InvoiceStateValidator>();
+                services.AddScoped<GetPayoffSummaryHandler>();
+                services.AddScoped<GetPayoffsHandler>();
             }
         }
     }
